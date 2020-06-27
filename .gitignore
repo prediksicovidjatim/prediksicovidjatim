@@ -129,3 +129,10 @@ dmypy.json
 .pyre/
 
 Learning/Arcgis/country
+
+venv
+*.pyc
+staticfiles
+.env
+db.sqlite3
+getting-started/*
