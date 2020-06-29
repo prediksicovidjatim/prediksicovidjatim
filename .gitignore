@@ -129,6 +129,8 @@ dmypy.json
 .pyre/
 
 Learning/Arcgis/country
+learning/arcgis/country
+notebooks/arcgis/country
 
 venv
 *.pyc
