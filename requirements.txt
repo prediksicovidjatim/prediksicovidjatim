@@ -9,5 +9,8 @@ numpy
 #cartopy
 #watermark
 #pprint
-#mpld3
+mpld3
 scipy
+psycopg2-binary
+psycopg2
+dj-database-url
