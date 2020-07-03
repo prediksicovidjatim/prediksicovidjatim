@@ -3,3 +3,11 @@ gunicorn
 django-heroku
 requests-html
 arcgis
+pandas
+numpy
+#matplotlib
+#cartopy
+#watermark
+#pprint
+#mpld3
+scipy
