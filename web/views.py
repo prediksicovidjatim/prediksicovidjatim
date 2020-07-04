@@ -17,3 +17,7 @@ def db(request):
     greetings = Greeting.objects.all()
 
     return render(request, "db.html", {"greetings": greetings})
+
+def notebook(request, nb_path):
+    return render(request, "notebook.html", {"nb_path": nb_path})
+    
