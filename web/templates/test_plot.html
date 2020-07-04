@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+<div class="jumbotron text-center">
+  <div class="container">
+	<!--
+    <a href="/" class="lang-logo">
+      <img src="{% static 'lang-logo.png'%}">
+    </a>
+	-->
+    <h1>Test Plot</h1>
+    <p>Tulis apa ya di sini</p>
+    <a type="button" class="btn btn-lg btn-primary" href="http://infocovid19.jatimprov.go.id/index.php/data"><span class="glyphicon glyphicon-flash"></span> Sumber Data</a>
+    <a type="button" class="btn btn-lg btn-primary" href="https://github.com/prediksicovidjatim/prediksicovidjatim"><span class="glyphicon glyphicon-download"></span> Kode Sumber</a>
+  </div>
+</div>
+<div class="container">
+  <div class="row">
+    <div class="col-md-12">
+		{% autoescape off %}
+		{{ plot }}
+		{% endautoescape %}
+    </div>
+  </div> <!-- row -->
+</div>
+{% endblock %}
