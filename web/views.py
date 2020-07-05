@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 
-from .models import Greeting
+from web.models import Greeting
 
 import matplotlib.pyplot as plt
 import mpld3
