@@ -1,7 +1,7 @@
 import os
 from requests_html import HTMLSession
 from core import util
-from core.scraping.entities import Params, RawData
+from core.data.raw.entities import Params, RawData
 from multiprocessing import Pool
 from dotenv import load_dotenv
 load_dotenv()
@@ -85,9 +85,9 @@ class Scrapper:
             'kabko':kabko,
             'tanggal':tanggal,
             #'sampai':sampai,
-            'positif':self._parse_card(odp_card, self.positif_fields),
+            'positif':self._parse_card(positif_card, self.positif_fields),
             'odp':self._parse_card(odp_card, self.odp_fields),
-            'pdp':self._parse_card(odp_card, self.pdp_fields),
+            'pdp':self._parse_card(pdp_card, self.pdp_fields),
             'otg':self._parse_card_single(otg_card),
             'odr':self._parse_card_single(odr_card)
         }

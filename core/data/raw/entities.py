@@ -77,7 +77,12 @@ class RawPositif:
     def total_aktif(self):
         return self.dirawat.total
         
+    def total_calc(self):
+        return self.sembuh+self.meninggal+self.dirawat.total_opt()
         
+    def total_opt(self):
+        return self.total_calc() or self.total
+    
     
 class RawPDP:
     db_trans = {
@@ -99,6 +104,12 @@ class RawPDP:
         
     def total_aktif(self):
         return self.dirawat.total
+        
+    def total_calc(self):
+        return self.belum_diawasi+self.sehat+self.meninggal+self.dirawat.total_opt()
+        
+    def total_opt(self):
+        return self.total_calc() or self.total
         
 
 class RawODP:
@@ -122,6 +133,11 @@ class RawODP:
     def total_aktif(self):
         return self.dirawat.total
         
+    def total_calc(self):
+        return self.belum_dipantau+self.selesai_dipantau+self.meninggal+self.dipantau.total_opt()
+        
+    def total_opt(self):
+        return self.total_calc() or self.total
             
         
 class RawDirawat:
@@ -132,4 +148,9 @@ class RawDirawat:
         self.gedung = gedung
         self.rs = rs
     
+    def total_calc(self):
+        return self.rumah+self.gedung+self.rs
+        
+    def total_opt(self):
+        return self.total_calc() or self.total
         
