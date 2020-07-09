@@ -4,7 +4,9 @@ from core import util, database
 from core.data.raw.entities import RawData, RawODP, RawPDP, RawPositif
 
 
-def save_data(data):
+def save_data(data, upsert=False):
+    if isinstance(data[0], RawData):
+        data = [d.to_db_row() for d in data]
     columns = data[0].keys()
     columns_str = ", ".join(columns)
     updates = ["%s=EXCLUDED.%s" % (col, col) for col in columns]
@@ -13,16 +15,18 @@ def save_data(data):
     with database.get_conn() as conn, conn.cursor() as cur:
         args_str = ','.join(cur.mogrify(values_template, list(x.values())).decode('utf-8') for x in data)
         
-        cur.execute("""
-            INSERT INTO main.raw_covid_data(%s) VALUES %s
-            ON CONFLICT (kabko, tanggal) DO NOTHING
-        """ % (columns_str, args_str))
+        if upsert:
+            cur.execute("""
+                INSERT INTO main.raw_covid_data(%s) VALUES %s
+                ON CONFLICT (kabko, tanggal) DO UPDATE SET
+                    %s
+            """ % (columns_str, args_str, updates_str))
+        else:
+            cur.execute("""
+                INSERT INTO main.raw_covid_data(%s) VALUES %s
+                ON CONFLICT (kabko, tanggal) DO NOTHING
+            """ % (columns_str, args_str))
         
-        #cur.execute("""
-        #    INSERT INTO main.raw_covid_data(%s) VALUES %s
-        #    ON CONFLICT (kabko, tanggal) DO UPDATE SET
-        #        %s
-        #""" % (columns_str, args_str, updates_str))
         
         conn.commit()
         
@@ -32,6 +36,7 @@ value_cols.remove("kabko")
 non_zero_filter = " OR ".join(["%s<>0" % col for col in value_cols])
         
 def get_oldest_tanggal(kabko):
+    global non_zero_filter
     with database.get_conn() as conn, conn.cursor() as cur:
         cur.execute("""
             SELECT min(tanggal) FROM main.raw_covid_data
@@ -41,6 +46,7 @@ def get_oldest_tanggal(kabko):
         return cur.fetchone()[0]
         
 def trim_early_zeros():
+    global non_zero_filter
     with database.get_conn() as conn, conn.cursor() as cur:
         cur.execute("""
             DELETE FROM main.raw_covid_data d1
@@ -67,6 +73,7 @@ def fetch_kabko():
     with database.get_conn() as conn, conn.cursor() as cur:
         cur.execute("""
             SELECT kabko FROM main.kabko
+            ORDER BY kabko
         """)
         
         return [x for x, in cur.fetchall()]
@@ -75,6 +82,7 @@ def fetch_kabko_dict():
     with database.get_conn() as conn, conn.cursor() as cur:
         cur.execute("""
             SELECT * FROM main.kabko
+            ORDER BY kabko
         """)
         
         return {k:v for k, v in cur.fetchall()}
@@ -84,6 +92,7 @@ def fetch_data(kabko):
         cur.execute("""
             SELECT * FROM main.raw_covid_data
             WHERE kabko=%s
+            ORDER BY tanggal
         """, (kabko,))
         
         return [RawData(**RawData.from_db_row(row)) for row in cur.fetchall()]

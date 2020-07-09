@@ -110,8 +110,13 @@ class Scrapper:
 
         #now we execute it
         #we use starmap instead of map because there are multiple arguments
-        output = pool.starmap(self.scrap, args)
-        pool.close()
-        pool.join()
-        
+        try:
+            output = pool.starmap(self.scrap, args)
+            pool.close()
+            pool.join()
+        except ConnectionError as ex:
+            raise
+        finally:
+            pool.terminate()
+            del pool
         return output

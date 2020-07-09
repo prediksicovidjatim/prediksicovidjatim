@@ -34,13 +34,31 @@ class RawData:
         ret["positif"] = util.filter_dict_new(row, RawPositif.db_trans)
         return ret
         
-    def to_db_row(self):
+    def to_db_row(self, option=None):
         ret = {k: getattr(self, v) for k, v in RawData.db_trans.items()}
         ret["tanggal"] = util.format_date(self.tanggal)
         ret_odp = RawData._to_db_row_sub(self.odp, self.odp.dipantau, RawODP.db_trans)
         ret_pdp = RawData._to_db_row_sub(self.pdp, self.pdp.dirawat, RawPDP.db_trans)
         ret_positif = RawData._to_db_row_sub(self.positif, self.positif.dirawat, RawPositif.db_trans)
-        return {**ret, **ret_odp, **ret_pdp, **ret_positif}
+        
+        ret = {**ret, **ret_odp, **ret_pdp, **ret_positif}
+        
+        if option == "max":
+            ret["odp_total"] = self.odp.total_max()
+            ret["odp_rawat_total"] = self.odp.dipantau.total_max()
+            ret["pdp_total"] = self.pdp.total_max()
+            ret["pdp_rawat_total"] = self.pdp.dirawat.total_max()
+            ret["pos_total"] = self.positif.total_max()
+            ret["pos_rawat_total"] = self.positif.dirawat.total_max()
+        elif option == "opt":
+            ret["odp_total"] = self.odp.total_opt()
+            ret["odp_rawat_total"] = self.odp.dipantau.total_opt()
+            ret["pdp_total"] = self.pdp.total_opt()
+            ret["pdp_rawat_total"] = self.pdp.dirawat.total_opt()
+            ret["pos_total"] = self.positif.total_opt()
+            ret["pos_rawat_total"] = self.positif.dirawat.total_opt()
+            
+        return ret
         
     def _to_db_row_sub(obj, obj_rawat, db_trans):
         ret = {k: getattr(obj, v) for k, v in db_trans.items() if "rawat" not in k}
@@ -82,6 +100,9 @@ class RawPositif:
         
     def total_opt(self):
         return self.total_calc() or self.total
+        
+    def total_max(self):
+        return max(self.total_calc(), self.total)
     
     
 class RawPDP:
@@ -111,6 +132,9 @@ class RawPDP:
     def total_opt(self):
         return self.total_calc() or self.total
         
+    def total_max(self):
+        return max(self.total_calc(), self.total)
+        
 
 class RawODP:
     db_trans = {
@@ -138,6 +162,9 @@ class RawODP:
         
     def total_opt(self):
         return self.total_calc() or self.total
+        
+    def total_max(self):
+        return max(self.total_calc(), self.total)
             
         
 class RawDirawat:
@@ -153,4 +180,7 @@ class RawDirawat:
         
     def total_opt(self):
         return self.total_calc() or self.total
+        
+    def total_max(self):
+        return max(self.total_calc(), self.total)
         

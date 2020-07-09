@@ -1,9 +1,10 @@
-from datetime import datetime
+from datetime import datetime, date
 import numpy as np
 
 def parse_int(text):
     if not text:
         return 0
+    text = text.replace(".", "").replace(",", "").replace(" ", "")
     try:
         val = int(text)
     except ValueError as ex:
@@ -16,11 +17,15 @@ def parse_int(text):
 def mogrify_value_template(n):
     return "("+ ",".join(n*("%s",))+")"
 
-def parse_date(date_str):
-    return datetime.strptime(date_str, "%Y-%m-%d").date()
+def parse_date(d):
+    if isinstance(d, date):
+        return d
+    return datetime.strptime(d, "%Y-%m-%d").date()
     
-def format_date(date):
-    return datetime.strftime(date, "%Y-%m-%d")
+def format_date(d):
+    if isinstance(d, str):
+        return d
+    return datetime.strftime(d, "%Y-%m-%d")
     
 def filter_dates_after(dates, after):
     if after is None:
@@ -63,4 +68,33 @@ def date_plot(ax):
 def sum_respectively(lists):
     return [sum(x) for x in zip(*lists)]
 
-
+def lerp(start, end, t):
+    return start + (end-start)*t
+    
+def lerp_many(start, end, n):
+    return [lerp(start, end, i/(n+1.0)) for i in range(1, n+1)]
+    
+def get_missing_data(data, start, count=1):
+    end = start+count-1
+    return [data[i].to_db_row() for i in range(start, end+1)]
+    
+def days_between(start, end):
+    dt = parse_date(end) - parse_date(start)
+    return dt.days
+    
+def get_date_index(data, date):
+    return days_between(data[0].tanggal, date)
+    
+from datetime import timedelta
+def lerp_missing_data(data, start, count=1):
+    end = start+count-1
+    yesterday = data[start-1].to_db_row()
+    tomorrow = data[end+1].to_db_row()
+    return [{
+        k:(
+            int(lerp(v, tomorrow[k], i/(count+1.0))) if isinstance(v, int) 
+            else format_date(parse_date(v) + timedelta(days=i)) if isinstance(v, str) and "2020-" in v
+            else v
+        )
+        for k, v in yesterday.items()
+    } for i in range(1, 1+count)]
