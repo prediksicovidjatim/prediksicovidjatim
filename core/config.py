@@ -7,6 +7,7 @@ FONT_BIG = 16
 FIG_SIZE = (13,8)
 LINE_WIDTH = 2
 
+FLOAT_TOLERANCE=1e-7
 
 def init_plot(font_small=None, font_medium=None, font_big=None, fig_size=None, line_width=None):
     global FONT_SMALL

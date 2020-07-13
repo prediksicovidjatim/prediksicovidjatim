@@ -96,3 +96,30 @@ def fetch_data(kabko):
         """, (kabko,))
         
         return [RawData(**RawData.from_db_row(row)) for row in cur.fetchall()]
+        
+def get_latest_data(kabko=None):
+    with database.get_conn() as conn, conn.cursor(cursor_factory=DictCursor) as cur:
+        if kabko:
+            cur.execute("""
+                SELECT * FROM covid_data_latest
+                WHERE kabko=%s
+            """, (kabko,))
+        else:
+            cur.execute("""
+                SELECT * FROM main.covid_data_latest
+            """)
+        
+        return [RawData(**RawData.from_db_row(row)) for row in cur.fetchall()]
+        
+
+sum_columns = ", ".join(["SUM(%s) AS %s" % (col, col) for col in value_cols])
+        
+def get_latest_total():
+    global sum_columns
+    with database.get_conn() as conn, conn.cursor(cursor_factory=DictCursor) as cur:
+        cur.execute("""
+            SELECT * FROM main.covid_data_total_latest
+        """)
+        
+        return [RawData(**RawData.from_db_row(row)) for row in cur.fetchall()]
+    

@@ -1,7 +1,7 @@
 import os
 import psycopg2
 import psycopg2.pool
-from psycopg2.extras import DictCursor 
+from psycopg2.extras import DictCursor, execute_batch
 from contextlib import contextmanager
 from dotenv import load_dotenv
 load_dotenv()

@@ -3,7 +3,7 @@ gunicorn
 django-heroku
 requests-html
 arcgis
-pandas
+#pandas
 numpy
 #matplotlib
 #cartopy
@@ -15,3 +15,5 @@ psycopg2-binary
 psycopg2
 dj-database-url
 python-dotenv
+sklearn
+numdifftools
