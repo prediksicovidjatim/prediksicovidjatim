@@ -113,3 +113,5 @@ class ResultScorerMany:
         
         self.scorer_flat = ResultScorer(result, self.data_train_flat, self.data_test_flat, self.pred_train_flat, self.pred_test_flat)
     
+    def stdev(self):
+        return util.stdev(self.result.covar)

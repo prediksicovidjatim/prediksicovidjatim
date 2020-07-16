@@ -1,4 +1,4 @@
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 import numpy as np
 import matplotlib.dates as mdates
 import math
@@ -7,6 +7,12 @@ from operator import add
 from core.data.model.entities import RtData
 from sklearn.model_selection import TimeSeriesSplit
 from core import config
+import calendar
+
+def chunks(lst, n):
+    #https://stackoverflow.com/a/312464
+    for i in range(0, len(lst), n):
+        yield lst[i:i + n]
 
 def sanity_check_init(name, y):
     if y < 0:
@@ -58,6 +64,20 @@ def format_date(d):
         return d
     return datetime.strftime(d, "%Y-%m-%d")
     
+def ms_to_date(d):
+    return datetime.utcfromtimestamp(d / 1e3).date()
+    
+def date_to_ms(d):
+    d = parse_date(d) if isinstance(d, str) else d
+    return int(calendar.timegm(d.timetuple()) * 1e3)
+    
+def shift_date(init, shift):
+    return init + timedelta(days=shift)
+    
+def date_range(init, length, start=0):
+    init = parse_date(init) if isinstance(init, str) else init
+    return [shift_date(init, x) for x in range(start, length+start)]
+    
 def filter_dates_after(dates, after):
     if after is None:
         return list(dates)
@@ -71,6 +91,9 @@ def filter_dict(data, keys):
     
 def filter_dict_new(data, keys):
     return {v:data[k] for k, v in keys.items()}
+    
+def extract_dict(data, keys):
+    return [data[k] for k in keys]
     
 def delta(arr):
     return np.array([arr[0]] + [arr[i]-arr[i-1] for i in range(1, len(arr))])

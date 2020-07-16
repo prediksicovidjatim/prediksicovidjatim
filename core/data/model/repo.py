@@ -15,7 +15,8 @@ def _fetch_day_data(kabko, cur):
             tanggal,
             pos_total AS infected,
             (pos_rawat_total-pos_rawat_rs) AS infectious,
-            pos_rawat_rs AS critical,
+            pos_rawat_rs AS critical_cared,
+            pos_rawat_total AS infectious_all,
             pos_sembuh AS recovered,
             pos_meninggal AS dead
         FROM main.raw_covid_data
@@ -101,6 +102,7 @@ def _get_kabko(kabko, cur):
             k.kabko,
             text,
             population,
+            outbreak_shift,
             tanggal AS first_positive
         FROM main.kabko k, main.first_pos_date fpd
         WHERE k.kabko=fpd.kabko AND k.kabko=%s
@@ -166,14 +168,26 @@ def _update_rt_init(kabko, rts, cur):
     )
     cur.execute("DEALLOCATE update_rt_init")
     
+def update_outbreak_shift(kabko, outbreak_shift, cur=None):
+    if cur:
+        return _update_outbreak_shift(kabko, outbreak_shift, cur)
+    else:
+        with database.get_conn() as conn, conn.cursor() as cur:
+            return _update_outbreak_shift(kabko, outbreak_shift, cur)
+            
+def _update_outbreak_shift(kabko, outbreak_shift, cur):
+    cur.execute("""
+        UPDATE main.kabko
+        SET outbreak_shift=%s
+        WHERE kabko=%s
+    """, (outbreak_shift, kabko,))
     
-def update_params_rt(kabko, params, option="seicrd_rlc"):
+def update_all(kabko, params, outbreak_shift, option="seicrd_rlc"):
     params_needed = KabkoData.get_params_needed(option)
     filtered_params = util.filter_dict(params, params_needed)
-    rt_count = kabko.rt_count if "_r" in option else 1
-    rts_0 = util.get_kwargs_rt(params, rt_count)
-    rts = zip(kabko.rt_dates, rts_0)
+    rts = kabko.transform_rt_to_dates(kabko.get_kwargs_rt(params, "_r" in option))
     with database.get_conn() as conn, conn.cursor() as cur:
         update_params_init(kabko.kabko, filtered_params, cur)
         update_rt_init(kabko.kabko, rts, cur)
+        update_outbreak_shift(kabko.kabko, outbreak_shift, cur)
         conn.commit()

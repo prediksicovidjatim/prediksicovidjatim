@@ -4,29 +4,50 @@ import numpy as np
 from core.modeling import SeicrdRlcModel, SeicrdRlExtModel, SeicrdRlModel, SeicrdRModel, SeicrdModel, SeirdModel, BaseModel
         
 class KabkoData:
-    def __init__(self, kabko, text, population, first_positive, data, kapasitas_rs, rt, params):
+    def __init__(self, kabko, text, population, outbreak_shift, first_positive, data, kapasitas_rs, rt, params):
         self.kabko = kabko
         self.text = text
         self.population = population
-        self.first_positive = first_positive
+        self.last_outbreak_shift = outbreak_shift
         
-        self._params = params
-        self.params = {p.parameter:p for p in params}
-        self._rt_0 = rt
-        self._rt_1 = rt[1:]
-        
-        self.rt_count = len(self._rt_0)
-        
+        self.set_params(params)
         self.set_data(data)
-        self.first_positive_index = self.get_date_index(self.first_positive)
+        self.set_rt(rt)
+        
+        self.set_first_positive(first_positive)
         
         self._kapasitas_rs = [(self.get_date_index(tanggal), kapasitas) for tanggal, kapasitas in kapasitas_rs]
         
+    def set_params(self, params):
+        #self._params = params
+        self.params = {p.parameter:p for p in params}
         
+    def set_first_positive(self, first_positive):
+        self.first_positive = first_positive
+        self.first_positive_index = self.get_date_index(self.first_positive)
+        
+    def set_rt(self, rt):
+        self._rt_0 = rt
+        self.rt_count = len(self._rt_0)
         self.rt_dates = [d.tanggal for d in self._rt_0]
         self.rt_days = [d.day_index(self.oldest_tanggal) for d in self._rt_0]
+        #self._rt_0_delta = util.rt_delta(self._rt_0, self.oldest_tanggal)
         
-        self._rt_0_delta = util.rt_delta(self._rt_0, self.oldest_tanggal)
+        
+    def transform_rt_to_dates(self, rt):
+        if len(rt) == 1:
+            return [(self.rt_dates[0], rt[0])]
+        return list(zip(self.rt_dates, rt))
+        
+    def get_kwargs_rt(self, kwargs, single=False):
+        if single:
+            return [kwargs["r_0"]]
+        return util.get_kwargs_rt(kwargs, self.rt_count)
+        
+    def get_rt_delta(self, rt_values):
+        rt_data = list(zip(self.rt_days, rt_values))
+        rt_delta = util.rt_delta(rt_data, self.oldest_tanggal)
+        return rt_delta
         
     def outbreak_shift(self, incubation_period, extra=0, minimum=None):
         ret = extra-(self.first_positive_index-incubation_period)
@@ -38,20 +59,6 @@ class KabkoData:
         ret = self.data_count + outbreak_shift
         return int(ret)
         
-    def get_date_index(self, tanggal):
-        return int(util.days_between(self.oldest_tanggal, tanggal, True))
-        
-    def set_data(self, data):
-        self.data = data
-        self.data_count = len(data)
-        self.oldest_tanggal = data[0].tanggal
-        self.latest_tanggal = data[-1].tanggal
-        self.infected = np.array([d.infected for d in data])
-        self.infectious = np.array([d.infectious for d in data])
-        self.critical_cared = np.array([d.critical_cared for d in data])
-        self.recovered = np.array([d.recovered for d in data])
-        self.dead = np.array([d.dead for d in data])
-        
     def get_dataset(self, d, shift=0):
         # TODO
         ret = None
@@ -59,6 +66,8 @@ class KabkoData:
             ret = self.infectious 
         elif d == "critical_cared":
             ret = self.critical_cared
+        elif d == "infectious_all":
+            ret = self.infectious_all
         elif d == "recovered":
             ret = self.recovered
         elif d == "dead":
@@ -71,6 +80,31 @@ class KabkoData:
         
     def get_datasets(self, datasets, shift=0):
         return {k:self.get_dataset(k, shift) for k in datasets}
+        
+    def get_datasets_values(self, datasets, shift=0):
+        return np.array([self.get_dataset(k, shift) for k in datasets])
+        
+    def get_date_index(self, tanggal):
+        return int(util.days_between(self.oldest_tanggal, tanggal, True))
+        
+    def set_data(self, data):
+        self.data = data
+        self.data_count = len(data)
+        self.oldest_tanggal = data[0].tanggal
+        #self.latest_tanggal = data[-1].tanggal
+        #self.tanggal = [d.tanggal for d in data]
+        self.infected = np.array([d.infected for d in data])
+        self.infectious = np.array([d.infectious for d in data])
+        self.critical_cared = np.array([d.critical_cared for d in data])
+        self.infectious_all = np.array([d.infectious_all for d in data])
+        self.recovered = np.array([d.recovered for d in data])
+        self.dead = np.array([d.dead for d in data])
+        
+    def get_tanggal(self, outbreak_shift=0, length=None):
+        if length is None:
+            return util.date_range(self.oldest_tanggal, length+outbreak_shift, start=-outbreak_shift)
+        return util.date_range(self.oldest_tanggal, length, start=-outbreak_shift)
+        
         
     def kapasitas_rs(self, t):
         smallest_day = -1
@@ -119,6 +153,30 @@ class KabkoData:
             raise ValueError("Invalid option: " + str(option))
         return params_needed
         
+        
+    def get_params_init(self, option="seicrd_rlc", outbreak_shift=None, extra_days=0):
+        params_needed = KabkoData.get_params_needed(option)
+        
+        ret = {}
+        ret["population"] = self.population
+        
+        for p in util.filter_dict(self.params, params_needed).values():
+            ret[p.parameter] = p.init
+            
+        ret["r_0"] = self._rt_0[0].init
+        
+        #test these
+        if "_r" in option:
+            for i in range(1, len(self._rt_0)):
+                cur = self._rt_0[i]
+                ret['r_%d' % (i,)] = cur.init
+                
+        if outbreak_shift is None:
+            outbreak_shift = self.last_outbreak_shift
+        days = self.data_count + outbreak_shift + extra_days
+        ret["days"] = days
+        return ret
+        
     def apply_params(self, mod, option="seicrd_rlc"):
         params_needed = KabkoData.get_params_needed(option)
         
@@ -144,44 +202,14 @@ class KabkoData:
                     max=cur.max,
                     vary=True
                 )
-                '''
-                prev = self._rt_0[i-1]
-                mod.set_param_hint(
-                    'r_%d_min' % (i,), 
-                    value=cur.min,
-                    vary=False
-                )
-                mod.set_param_hint(
-                    'r_%d_max' % (i,), 
-                    value=cur.max,
-                    vary=False
-                )
-                if i % 2 == 1:
-                    mod.set_param_hint(
-                        'dr_%d' % (i,), 
-                        value=-self._rt_0_delta[i-1][1], 
-                        min=max(0, prev.min-cur.max),
-                        max=max(0, prev.max-cur.min),
-                        vary=True
-                    )
-                    mod.set_param_hint('r_%d' % (i,), expr='min(max(r_%d-dr_%d, r_%d_min), r_%d_max)' % (i-1, i, i, i))
-                else:
-                    mod.set_param_hint(
-                        'dr_%d' % (i,), 
-                        value=self._rt_0_delta[i-1][1], 
-                        min=max(0, cur.min-prev.max),
-                        max=max(0, cur.max-prev.min), 
-                        vary=True
-                    )
-                    mod.set_param_hint('r_%d' % (i,), expr='min(max(r_%d+dr_%d, r_%d_min), r_%d_max)' % (i-1, i, i, i))
-                '''
     
 class DayData:
-    def __init__(self, tanggal, infected, infectious, critical_cared, recovered, dead):
+    def __init__(self, tanggal, infected, infectious, critical_cared, infectious_all, recovered, dead):
         self.tanggal = tanggal
         self.infected = infected
         self.infectious = infectious
         self.critical_cared = critical_cared
+        self.infectious_all = infectious_all
         self.recovered = recovered
         self.dead = dead
         

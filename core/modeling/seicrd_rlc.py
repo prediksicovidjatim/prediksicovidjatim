@@ -37,6 +37,9 @@ class SeicrdRlcModelResult:
     def critical_over(self):
         return SeicrdRlcModel.critical_over(self.critical, self.kapasitas_rs)
         
+    def infectious_all(self):
+        return self.infectious + self.critical
+        
     def dead(self):
         return self.dead_normal + self.dead_over
         
@@ -48,6 +51,9 @@ class SeicrdRlcModelResult:
         
     def critical_cared_scaled(self):
         return self.test_coverage * self.critical_cared()
+        
+    def infectious_all_scaled(self):
+        return self.test_coverage * self.infectious_all()
         
     def recovered_scaled(self):
         return self.test_coverage * self.recovered
@@ -82,6 +88,9 @@ class SeicrdRlcModelResult:
     def daily_critical(self):
         return util.delta(self.critical)
         
+    def daily_infectious_all(self):
+        return util.delta(self.infectious_all())
+        
     def daily_recovered(self):
         return util.delta(self.recovered)
         
@@ -100,6 +109,9 @@ class SeicrdRlcModelResult:
     def daily_critical_cared_scaled(self):
         return util.delta(self.critical_cared_scaled())
         
+    def daily_infectious_all_scaled(self):
+        return util.delta(self.infectious_all_scaled())
+        
     def daily_recovered_scaled(self):
         return util.delta(self.recovered_scaled())
         
@@ -116,6 +128,8 @@ class SeicrdRlcModelResult:
             ret = self.infectious_scaled()
         elif d == "critical_cared":
             ret = self.critical_cared_scaled()
+        elif d == "infectious_all":
+            ret = self.infectious_all_scaled()
         elif d == "recovered":
             ret = self.recovered_scaled()
         elif d == "dead":
@@ -128,6 +142,9 @@ class SeicrdRlcModelResult:
         
     def get_datasets(self, datasets, shift=0):
         return {k:self.get_dataset(k, shift) for k in datasets}
+        
+    def get_datasets_values(self, datasets, shift=0):
+        return np.array([self.get_dataset(k, shift) for k in datasets])
         
 class SeicrdRlcModel(BaseModel):
     params = ["incubation_period",
@@ -170,12 +187,8 @@ class SeicrdRlcModel(BaseModel):
         
         #tricky part because I must not take y+dy (the flow) into account, because I need dt to do that
         kapasitas_rs_val = kapasitas_rs(t)
-        if critical > kapasitas_rs_val:
-            critical_cared = kapasitas_rs_val
-            critical_over = kapasitas_rs_val - critical_cared
-        else:
-            critical_cared = critical
-            critical_over = 0
+        critical_cared = min(kapasitas_rs_val, critical)
+        critical_over = max(0, critical-critical_cared)
         
         exposed_flow_over = exposed_rate_over * susceptible * critical_over / population
         recovery_flow_critical = recovery_rate_critical * critical_cared * (1.0-death_chance_normal)
@@ -225,9 +238,8 @@ class SeicrdRlcModel(BaseModel):
                     **kwargs):
         days = int(days)
         #unpack rt values
-        rt_values = util.get_kwargs_rt(kwargs, self.kabko.rt_count)
-        rt_data = list(zip(self.kabko.rt_days, rt_values))
-        rt_delta = util.rt_delta(rt_data, self.kabko.oldest_tanggal)
+        rt_values = self.kabko.get_kwargs_rt(kwargs)
+        rt_delta = self.kabko.get_rt_delta(rt_values)
         r_0 = rt_values[0]
         
         #load values
@@ -315,20 +327,7 @@ class SeicrdRlcModel(BaseModel):
         self.last_result_full = ret
         
             
-        results = []
-        for d in self.datasets:
-            if d == "infectious":
-                results.append(ret.infectious_scaled())
-            elif d == "critical_cared":
-                results.append(ret.critical_cared_scaled())
-            elif d == "recovered":
-                results.append(ret.recovered_scaled())
-            elif d == "dead":
-                results.append(ret.dead_scaled())
-            elif d == "infected":
-                results.append(ret.infected_scaled())
-            else:
-                raise ValueError("Invalid dataset: " + str(d))
+        results = ret.get_datasets_values(self.datasets)
                 
         results = np.array(results)
         self.last_result = results

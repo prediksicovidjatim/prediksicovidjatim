@@ -13,13 +13,8 @@ class RawDataPlotterBase:
     def plot_main(self, ax, t, odr, otg, odp, pdp, positif, meninggal, total):
         ax.plot(t, odr, 'green', alpha=0.7, label='ODR')
         ax.plot(t, otg, 'blue', alpha=0.7, label='OTG')
-        ax.plot(t, odp, 'yellow', alpha=0.7, label='ODP')
-        ax.plot(t, pdp, 'orange', alpha=0.7, label='PDP')
-        ax.plot(t, positif, 'red', alpha=0.7, label='Positif')
-        ax.plot(t, meninggal, 'black', alpha=0.7, label='Meninggal')
+        self.plot_main_lite(ax, t, odp, pdp, positif, meninggal)
         ax.plot(t, total, 'grey', alpha=0.7, label='Total (Calc)')
-
-        ax.set_xlabel('Time (days)', labelpad=10)
 
     def plot_main_lite(self, ax, t, odp, pdp, positif, meninggal):
         ax.plot(t, odp, 'yellow', alpha=0.7, label='ODP')
