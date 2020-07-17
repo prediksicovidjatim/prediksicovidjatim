@@ -6,7 +6,7 @@ from .base_model import BaseModel
 import math
 
 class SeicrdRlcModelResult:
-    def __init__(self, t, population, susceptible, exposed_normal, exposed_over, infectious, critical, recovered, dead_normal, dead_over, death_chance_val, r0_normal_val, kapasitas_rs_val, r0_over_val, test_coverage):
+    def __init__(self, t, population, susceptible, exposed_normal, exposed_over, infectious, critical, recovered, dead_normal, dead_over, mortality_rate, r0_normal, kapasitas_rs, r0_over, test_coverage):
         self.t = t
         self.population = population
         self.susceptible = susceptible
@@ -17,10 +17,10 @@ class SeicrdRlcModelResult:
         self.recovered = recovered
         self.dead_normal = dead_normal
         self.dead_over = dead_over
-        self.death_chance = death_chance_val
-        self.r0_normal = r0_normal_val
-        self.kapasitas_rs = kapasitas_rs_val
-        self.r0_over = r0_over_val
+        self.mortality_rate = mortality_rate
+        self.r0_normal = r0_normal
+        self.kapasitas_rs = kapasitas_rs
+        self.r0_over = r0_over
         self.test_coverage = test_coverage
         
     def r0_overall(self):
@@ -309,8 +309,8 @@ class SeicrdRlcModel(BaseModel):
         
         exposed = util.sum_element(exposed_normal, exposed_over)
         dead = util.sum_element(dead_normal, dead_over)
-        death_chance_val = self.death_chance(t, exposed, dead, infectious_rate)
-        #death_chance_val = np.zeros(days)
+        mortality_rate_val = self.mortality_rate(t, exposed, dead, infectious_rate)
+        #mortality_rate_val = np.zeros(days)
         
         test_coverage_val = util.map_function(t, test_coverage)
         r0_normal_val = util.map_function(t, logistic_rt)
@@ -319,7 +319,7 @@ class SeicrdRlcModel(BaseModel):
         #r0_normal_val = np.zeros(days)
         #r0_over_val = np.zeros(days)
         
-        return SeicrdRlcModelResult(t, population_2, susceptible, exposed_normal, exposed_over, infectious, critical, recovered, dead_normal, dead_over, death_chance_val, r0_normal_val, kapasitas_rs_val, r0_over_val, test_coverage_val)
+        return SeicrdRlcModelResult(t, population_2, susceptible, exposed_normal, exposed_over, infectious, critical, recovered, dead_normal, dead_over, mortality_rate_val, r0_normal_val, kapasitas_rs_val, r0_over_val, test_coverage_val)
         
     
     def _fitter(self, ret):

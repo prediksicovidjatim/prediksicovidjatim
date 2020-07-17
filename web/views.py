@@ -7,22 +7,16 @@ import matplotlib.pyplot as plt
 import mpld3
 import numpy as np
 
+from core.data.model import ModelDataRepo
+from core import config
+from core.modeling import SeicrdRlcModel, ModelPlotter
 
-def init_matplotlib():
-    SMALL_SIZE = 12
-    MEDIUM_SIZE = 14
-    BIGGER_SIZE = 16
-    plt.rc('font', size=SMALL_SIZE)          # controls default text sizes
-    plt.rc('axes', titlesize=SMALL_SIZE)     # fontsize of the axes title
-    plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
-    plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
-    plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
-    plt.rc('legend', fontsize=MEDIUM_SIZE)    # legend fontsize
-    plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
-    plt.rc('figure', figsize=(13, 8))  
-    plt.rc('lines', linewidth=2) 
+from django.template.defaulttags import register
+@register.filter
+def get_item(dictionary, key):
+    return dictionary.get(key)
 
-init_matplotlib()
+config.init_plot(fig_size=(10,6))
 
 # Create your views here.
 def index(request):
@@ -42,27 +36,45 @@ def db(request):
 def notebook(request, nb_path):
     return render(request, "notebook.html", {"nb_path": nb_path})
     
-def test_plot(request):
-    fig, ax = plt.subplots(1, 1)
-    x = np.linspace(0, 49, 50)
-    y = np.array([xi*xi for xi in x])
 
-    ax.plot(x, y, 'b', alpha=0.7, label='y')
-
-    ax.set_xlabel('Time (days)', labelpad=10)
-
-    ax.yaxis.set_tick_params(length=0)
-    ax.xaxis.set_tick_params(length=0)
-
-    ax.grid(b=True, which='major', c='w', lw=0.5, ls='-', alpha=0.25)
-
-    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.09),
-              fancybox=True, shadow=True, ncol=5)
-
-
-    for spine in ('top', 'right', 'bottom', 'left'):
-        ax.spines[spine].set_visible(False)
-
-        
-    g = mpld3.fig_to_html(fig)
-    return render(request, "test_plot.html", {"plot": g})
+def kabko(request):
+    kabko = request.GET.getlist('kabko')
+    if kabko and len(kabko) > 0 and kabko[0]:
+        return grafik(request, kabko[0])
+    kabko_dict = ModelDataRepo.fetch_kabko_dict()
+    return render(request, "kabko.html", {"kabko_dict": kabko_dict})
+    
+def _plot_compare(plotter, kabko, d, length):
+    datasets = kabko.get_datasets([d], kabko.last_outbreak_shift)
+    return plotter.plot(
+        plotter.plot_main_data, 
+        datasets,
+        length
+    )
+    
+def grafik(request, kabko):
+    kabko = ModelDataRepo.get_kabko_full(kabko)
+    
+    mod = SeicrdRlcModel(kabko)
+    params = kabko.get_params_init(extra_days=config.PREDICT_DAYS)
+    model_result = mod.model(**params)
+    
+    plotter = ModelPlotter(model_result)
+    length = kabko.data_count + kabko.last_outbreak_shift
+    datasets = ["infectious_all", "critical_cared", "recovered", "dead", "infected"]
+    compare = {d:mpld3.fig_to_html(_plot_compare(plotter, kabko, d, length)) for d in datasets}
+    
+    main = {
+        "main": mpld3.fig_to_html(plotter.plot(plotter.plot_main)),
+        "main_lite": mpld3.fig_to_html(plotter.plot(plotter.plot_main_lite)),
+        "daily_lite": mpld3.fig_to_html(plotter.plot(plotter.plot_daily_lite)),
+        "mortality_rate": mpld3.fig_to_html(plotter.plot(plotter.plot_mortality_rate)),
+        "over": mpld3.fig_to_html(plotter.plot(plotter.plot_over)),
+        #"healthcare": plotter.plot(plotter.plot_healthcare)
+    }
+    
+    return render(request, "grafik.html", {
+        "kabko": kabko,
+        "main_plots": main,
+        "compare_plots": compare
+    })

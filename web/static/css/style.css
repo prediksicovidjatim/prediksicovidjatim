@@ -1,0 +1,70 @@
+body, html {
+  min-width: 100vw;
+  min-height: 100vh;
+}
+
+.vertical-center {
+  margin: 0;
+  position: absolute;
+  top: 50%;
+  -ms-transform: translateY(-50%);
+  transform: translateY(-50%);
+}
+
+.center {
+  margin: 0;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  -ms-transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%);
+}
+
+.flex {
+  flex: 1;
+}
+.jumbotron {
+	background: #532f8c;
+	color: white;
+	margin-bottom: 0px !important;
+}
+.jumbotron .btn-primary {
+	background: #845ac7;
+	border-color: #845ac7
+}
+.jumbotron .btn-primary:hover {
+	background: #7646c1
+}
+.jumbotron p {
+	color: #d9ccee;
+	max-width: 75%;
+	margin: 1em auto 2em
+}
+.kabko-select{
+	max-width: 30em !important;
+}
+.corner-0{
+	border-radius: 0;
+}
+.nav-link-inverse{
+	color: white;
+	border-top: none !important;
+	border-left: none !important;
+	border-right: none !important;
+	border-bottom: 1px solid white !important;
+}
+.nav-link-inverse:hover{
+	color: white;
+	background: #7646c1;
+}
+.nav-link-inverse.active{
+	color: black;
+}
+.nav-link-inverse.active:hover{
+	color: black;
+}
+
+table .shrink {
+  width: 1px;
+  white-space: nowrap;
+}

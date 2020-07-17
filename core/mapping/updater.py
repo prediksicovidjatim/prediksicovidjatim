@@ -36,7 +36,7 @@ class MapUpdater:
         if len(incapable) > 0:
             raise Exception("You need to have %s capabilities" % (str(incapable),))
             #return False
-        return True
+        #return True
         
     def filter_kabko(self, layer, kabko):
         return layer.query(

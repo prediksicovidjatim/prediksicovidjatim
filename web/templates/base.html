@@ -1,70 +1,36 @@
+{% load static %}
 <!DOCTYPE html>
 <html>
 <head>
-<title>Python Getting Started on Heroku</title>
-  <link rel="stylesheet" type="text/css" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" />
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
-  <script type="text/javascript" src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
-  <style type="text/css">
-    .jumbotron {
-        background: #532f8c;
-        color: white;
-        padding-bottom: 80px
-    }
-    .jumbotron .btn-primary {
-        background: #845ac7;
-        border-color: #845ac7
-    }
-    .jumbotron .btn-primary:hover {
-        background: #7646c1
-    }
-    .jumbotron p {
-        color: #d9ccee;
-        max-width: 75%;
-        margin: 1em auto 2em
-    }
-    .navbar+.jumbotron {
-        margin-top: -20px
-    }
-    .jumbotron .lang-logo {
-        display: block;
-        background: #b01302;
-        border-radius: 50%;
-        overflow: hidden;
-        width: 100px;
-        height: 100px;
-        margin: auto;
-        border: 2px solid white
-    }
-    .jumbotron .lang-logo img {
-        max-width: 100%
-    }
-
-
-  </style>
+<title>Prediksi Covid-19 Jatim</title>
+  <link rel="stylesheet" type="text/css" href="{% static 'css/bootstrap.min.css' %}" />
+  <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}" />
+  <script src="{% static 'js/jquery.min.js' %}"></script>
+  <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
 </head>
-<body>
-<nav class="navbar navbar-default navbar-static-top navbar-inverse">
-  <div class="container">
-    <ul class="nav navbar-nav">
-      <li class="active">
-        <a href="/"><span class="glyphicon glyphicon-home"></span> Home</a>
+<body class="d-flex flex-column">
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="navbar-brand">PCovidJatim</div>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+    <ul class="navbar-nav mr-auto">
+      <li class="nav-item">
+        <a class="nav-link" href="/"><span class="glyphicon glyphicon-home"></span> Home</a>
       </li>
-      <li>
-        <a href="/about"><span class="glyphicon glyphicon-info-sign"></span> About</a>
+      <li class="nav-item">
+        <a class="nav-link" href="/grafik"><span class="glyphicon glyphicon-stats"></span> Grafik</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/about"><span class="glyphicon glyphicon-info-sign"></span> About</a>
       </li>
     </ul>
-	<!--
-    <ul class="nav navbar-nav navbar-right">
-      <li class="navbar-right">
-        <a href="https://devcenter.heroku.com"><span class="glyphicon glyphicon-book"></span> Heroku Dev Center</a>
-      </li>
-    </ul>
-	-->
   </div>
 </nav>
 {% block content %}{% endblock %}
-<div class=" bg-dark text-center text-white py-3 my-3">
+<div class=" bg-dark text-center text-white py-3">
 	&#169; 2020 Prediksi Covid Jatim
 </div>
 </body>

@@ -1,6 +1,7 @@
 from datetime import datetime, date, timezone
 import numpy as np
 import matplotlib.dates as mdates
+import matplotlib.pyplot as plt
 import math
 from datetime import timedelta
 from operator import add
@@ -8,6 +9,20 @@ from core.data.model.entities import RtData
 from sklearn.model_selection import TimeSeriesSplit
 from core import config
 import calendar
+
+def use_multiprocess():
+    try:
+        ipy_str = str(type(get_ipython()))
+        if 'zmqshell' in ipy_str:
+            #return 'jupyter'
+            return True
+        if 'terminal' in ipy_str:
+            #return 'ipython'
+            return True
+        return True
+    except:
+        #return 'terminal'
+        return False
 
 def chunks(lst, n):
     #https://stackoverflow.com/a/312464
@@ -229,7 +244,7 @@ def get_if_exists(d, index):
 def plot_single(t, data, title=None, label=None, color='blue'):
     fig, ax = plt.subplots(1, 1)
     _plot_single(ax, t, data, title, label, color)
-    util.post_plot(ax)
+    post_plot(ax)
     return fig
     
 def _plot_single(ax, t, data, title=None, label=None, color='blue'):

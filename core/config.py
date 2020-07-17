@@ -9,6 +9,7 @@ LINE_WIDTH = 2
 
 FLOAT_TOLERANCE=1e-7
 FIRST_TANGGAL = "2020-03-20"
+PREDICT_DAYS = 30
 
 def init_plot(font_small=None, font_medium=None, font_big=None, fig_size=None, line_width=None):
     global FONT_SMALL

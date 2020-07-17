@@ -69,19 +69,25 @@ def get_latest_tanggal():
         
         return cur.fetchone()[0]
     
-def fetch_kabko():
-    with database.get_conn() as conn, conn.cursor() as cur:
-        cur.execute("""
-            SELECT kabko FROM main.kabko
-            ORDER BY kabko
-        """)
+def fetch_kabko(cur=None):
+    if cur:
+        return _fetch_kabko(cur)
+    else:
+        with database.get_conn() as conn, conn.cursor() as cur:
+            return _fetch_kabko(cur)
         
-        return [x for x, in cur.fetchall()]
+def _fetch_kabko(cur):
+    cur.execute("""
+        SELECT kabko FROM main.kabko
+        ORDER BY kabko
+    """)
+    
+    return [x for x, in cur.fetchall()]
     
 def fetch_kabko_dict():
     with database.get_conn() as conn, conn.cursor() as cur:
         cur.execute("""
-            SELECT * FROM main.kabko
+            SELECT kabko, text FROM main.kabko
             ORDER BY kabko
         """)
         

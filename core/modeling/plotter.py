@@ -17,9 +17,9 @@ class ModelPlotter:
 
         ax.title.set_text('R0 over time')
         
-    def plot_death_chance(self, ax):
-        if self.result.death_chance is not None:
-            util._plot_single(ax, self.result.t, self.result.death_chance, title="Death Chance over Time", label="Death chance", color="orange")
+    def plot_mortality_rate(self, ax):
+        if self.result.mortality_rate is not None:
+            util._plot_single(ax, self.result.t, self.result.mortality_rate, title="Mortality Rate over Time", label="Mortality rate", color="orange")
         
     def plot_over(self, ax):
         if self.result.exposed_over is not None:
@@ -68,7 +68,7 @@ class ModelPlotter:
         )
         ax.title.set_text("Model-Data Comparison")
         
-    def _plot_data(self, ax, t, infectious=None, critical_cared=None, recovered=None, dead=None, infected=None, kapasitas_rs=None, is_data=False):
+    def _plot_data(self, ax, t, infectious=None, critical_cared=None, infectious_all=None, recovered=None, dead=None, infected=None, kapasitas_rs=None, is_data=False):
         line_style = "-" if is_data else "-"
         label_suffix = " (data)" if is_data else " (model)"
         alpha = 0.7 if is_data else 0.4
@@ -76,15 +76,17 @@ class ModelPlotter:
         if infectious is not None:
             ax.plot(t, infectious, 'blue', alpha=alpha, label='Infectious'+label_suffix, linewidth=line_width, ls=line_style)
         if critical_cared is not None:
-            ax.plot(t, critical_cared, 'red', alpha=alpha, label='Critical Cared'+label_suffix, linewidth=line_width, ls=line_style)
+            ax.plot(t, critical_cared, 'red', alpha=alpha, label='Positif Rawat RS'+label_suffix, linewidth=line_width, ls=line_style)
+        if infectious_all is not None:
+            ax.plot(t, infectious_all, 'purple', alpha=alpha, label='Positif Aktif'+label_suffix, linewidth=line_width, ls=line_style)
         if recovered is not None:
-            ax.plot(t, recovered, 'green', alpha=alpha, label='Recovered'+label_suffix, linewidth=line_width, ls=line_style)
+            ax.plot(t, recovered, 'green', alpha=alpha, label='Positif Sembuh'+label_suffix, linewidth=line_width, ls=line_style)
         if dead is not None:
-            ax.plot(t, dead, 'black', alpha=alpha, label='Dead'+label_suffix, linewidth=line_width, ls=line_style)
+            ax.plot(t, dead, 'black', alpha=alpha, label='Positif Meninggal'+label_suffix, linewidth=line_width, ls=line_style)
         if infected is not None:
-            ax.plot(t, dead, 'grey', alpha=alpha, label='Infected'+label_suffix, linewidth=line_width, ls=line_style)
+            ax.plot(t, infected, 'grey', alpha=alpha, label='Positif Total'+label_suffix, linewidth=line_width, ls=line_style)
         if kapasitas_rs is not None:
-            ax.plot(t, kapasitas_rs, 'orange', alpha=0.3, label='Healthcare', ls=':')
+            ax.plot(t, kapasitas_rs, 'orange', alpha=0.3, label='Kapasitas RS', ls=':')
         
         
     def _plot_main(self, ax, t, susceptible=None, exposed=None, infectious=None, critical=None, recovered=None, dead=None, kapasitas_rs=None, population=None, title="Main", line_style="-"):

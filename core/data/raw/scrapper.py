@@ -2,7 +2,10 @@ import os
 from requests_html import HTMLSession
 from core import util
 from core.data.raw.entities import Params, RawData
-from multiprocessing import Pool
+if util.use_multiprocess()
+    from multiprocess import Pool
+else:
+    from multiprocessing import Pool
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -98,11 +101,14 @@ class Scrapper:
     def scrap_bulk(self, kabko, tanggal, max_process_count=10):
         
         #we might not need this after all, but whatever
-        data = {k:{t:None for t in tanggal} for k in kabko}
+        #data = {k:{t:None for t in tanggal} for k in kabko}
         
         #prepare the args
         #scrap(kabko, tanggal)
         args = [(k, t) for t in tanggal for k in kabko]
+        
+        if max_process_count==1:
+            return [self.scrap(*a) for a in args]
         
         #we prepare the pool
         #pool in this context is like collection of available tabs

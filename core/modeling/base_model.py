@@ -18,7 +18,7 @@ class BaseModel:
                 raise ValueError("Invalid dataset: " + str(dataset))
         self.datasets = datasets
         
-    def death_chance(self, t, exposed, dead, infectious_rate):
+    def mortality_rate(self, t, exposed, dead, infectious_rate):
         return np.array([0] + [100 * dead[i] / sum(infectious_rate*exposed[:i]) if sum(infectious_rate*exposed[:i])>0 else 0 for i in range(1, len(t))])
         
     def fitter_flat(self, x, **kwargs):
