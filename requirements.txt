@@ -5,7 +5,7 @@ requests-html
 arcgis
 #pandas
 numpy
-#matplotlib
+matplotlib
 #cartopy
 #watermark
 #pprint
