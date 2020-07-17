@@ -11,7 +11,7 @@ numpy
 #pprint
 mpld3
 scipy
-psycopg2-binary
+#psycopg2-binary
 psycopg2
 dj-database-url
 python-dotenv
