@@ -2,7 +2,7 @@ import os
 from requests_html import HTMLSession
 from core import util
 from core.data.raw.entities import Params, RawData
-if util.use_multiprocess()
+if util.use_multiprocess():
     from multiprocess import Pool
 else:
     from multiprocessing import Pool
