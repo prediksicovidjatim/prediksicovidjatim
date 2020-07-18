@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404 
 
 from web.models import Greeting
 
@@ -53,6 +53,11 @@ def _plot_compare(plotter, kabko, d, length):
     )
     
 def grafik(request, kabko):
+    kabko_dict = ModelDataRepo.fetch_kabko_dict()
+    
+    if kabko not in kabko_dict:
+        raise Http404
+    
     kabko = ModelDataRepo.get_kabko_full(kabko)
     
     mod = SeicrdRlcModel(kabko)
@@ -75,6 +80,10 @@ def grafik(request, kabko):
     
     return render(request, "grafik.html", {
         "kabko": kabko,
+        "kabko_dict": kabko_dict,
         "main_plots": main,
         "compare_plots": compare
     })
+    
+def about(request):
+    return render(request, "about.html")

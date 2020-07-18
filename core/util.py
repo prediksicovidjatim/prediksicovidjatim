@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 import math
 from datetime import timedelta
 from operator import add
-from core.data.model.entities import RtData
 from sklearn.model_selection import TimeSeriesSplit
 from core import config
 import calendar
@@ -192,25 +191,6 @@ def check_finite(retT):
         
 def map_function(t, f):
     return np.array([f(ti) for ti in t])
-    
-def rt_delta(rt, oldest_tanggal=None):
-    first = rt[0]
-    if isinstance(first, RtData):
-        if not oldest_tanggal:
-            raise ValueError("You must specify oldest_tanggal if the rt are RtData")
-        return [(days_between(oldest_tanggal, rt[i].tanggal, True), rt[i].init-rt[i-1].init) for i in range(1, len(rt))]
-    elif isinstance(first, tuple):
-        first = first[0]
-        if isinstance(first, int):
-            return [(rt[i][0], rt[i][1]-rt[i-1][1]) for i in range(1, len(rt))]
-        elif isinstance(first, str) or isinstance(first, date) or isinstance(first, datetime):
-            if not oldest_tanggal:
-                raise ValueError("You must specify oldest_tanggal if the rt are tuples with dates")
-            return [(days_between(oldest_tanggal, rt[i].tanggal, True), rt[i][1]-rt[i-1][1]) for i in range(1, len(rt))]
-        raise ValueError("Invalid rt[0][0]: " + str(first))
-    elif isinstance(first, int):
-        return [(rt[i]-rt[i-1]) for i in range(1, len(rt))]
-    raise ValueError("Invalid rt[0]: " + str(first))
     
 def get_kwargs_rt(kwargs, count):
     return [kwargs["r_%d" % (i,)] for i in range(0, count)]

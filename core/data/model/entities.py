@@ -31,7 +31,7 @@ class KabkoData:
         self.rt_count = len(self._rt_0)
         self.rt_dates = [d.tanggal for d in self._rt_0]
         self.rt_days = [d.day_index(self.oldest_tanggal) for d in self._rt_0]
-        #self._rt_0_delta = util.rt_delta(self._rt_0, self.oldest_tanggal)
+        #self._rt_0_delta = KabkoData._rt_delta(self._rt_0, self.oldest_tanggal)
         
         
     def transform_rt_to_dates(self, rt):
@@ -44,9 +44,31 @@ class KabkoData:
             return [kwargs["r_0"]]
         return util.get_kwargs_rt(kwargs, self.rt_count)
         
+        
+    def _rt_delta(rt, oldest_tanggal=None):
+        from core.data.model.entities import RtData
+        first = rt[0]
+        if isinstance(first, RtData):
+            if not oldest_tanggal:
+                raise ValueError("You must specify oldest_tanggal if the rt are RtData")
+            return [(days_between(oldest_tanggal, rt[i].tanggal, True), rt[i].init-rt[i-1].init) for i in range(1, len(rt))]
+        elif isinstance(first, tuple):
+            first = first[0]
+            if isinstance(first, int):
+                return [(rt[i][0], rt[i][1]-rt[i-1][1]) for i in range(1, len(rt))]
+            elif isinstance(first, str) or isinstance(first, date) or isinstance(first, datetime):
+                if not oldest_tanggal:
+                    raise ValueError("You must specify oldest_tanggal if the rt are tuples with dates")
+                return [(days_between(oldest_tanggal, rt[i].tanggal, True), rt[i][1]-rt[i-1][1]) for i in range(1, len(rt))]
+            raise ValueError("Invalid rt[0][0]: " + str(first))
+        elif isinstance(first, int):
+            return [(rt[i]-rt[i-1]) for i in range(1, len(rt))]
+        raise ValueError("Invalid rt[0]: " + str(first))
+        
+        
     def get_rt_delta(self, rt_values):
         rt_data = list(zip(self.rt_days, rt_values))
-        rt_delta = util.rt_delta(rt_data, self.oldest_tanggal)
+        rt_delta = KabkoData._rt_delta(rt_data, self.oldest_tanggal)
         return rt_delta
         
     def outbreak_shift(self, incubation_period, extra=0, minimum=None):

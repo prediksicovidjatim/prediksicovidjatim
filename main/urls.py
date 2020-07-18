@@ -21,4 +21,5 @@ urlpatterns = [
     path("notebook/<path:nb_path>", web.views.notebook),
     path("grafik/", web.views.kabko),
     path("grafik/<str:kabko>", web.views.grafik),
+    path("about/", web.views.about),
 ]
