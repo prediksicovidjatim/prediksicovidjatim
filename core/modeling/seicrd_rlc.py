@@ -6,7 +6,7 @@ from .base_model import BaseModel
 import math
 
 class SeicrdRlcModelResult:
-    def __init__(self, t, population, susceptible, exposed_normal, exposed_over, infectious, critical, recovered, dead_normal, dead_over, mortality_rate, r0_normal, kapasitas_rs, r0_over, test_coverage):
+    def __init__(self, t, population, susceptible, exposed_normal, exposed_over, infectious, critical, recovered_normal, recovered_critical, dead_normal, dead_over, mortality_rate, r0_normal, kapasitas_rs, r0_over, test_coverage):
         self.t = t
         self.population = population
         self.susceptible = susceptible
@@ -14,7 +14,8 @@ class SeicrdRlcModelResult:
         self.exposed_over = exposed_over
         self.infectious = infectious
         self.critical = critical
-        self.recovered = recovered
+        self.recovered_normal = recovered_normal
+        self.recovered_critical = recovered_critical
         self.dead_normal = dead_normal
         self.dead_over = dead_over
         self.mortality_rate = mortality_rate
@@ -40,29 +41,29 @@ class SeicrdRlcModelResult:
     def infectious_all(self):
         return self.infectious + self.critical
         
+    def recovered(self):
+        return self.recovered_normal + self.recovered_critical
+        
     def dead(self):
         return self.dead_normal + self.dead_over
         
-    def critical_over_scaled(self):
-        return self.test_coverage * self.critical_over()
-        
     def infectious_scaled(self):
-        return self.test_coverage * self.infectious + self.critical_over_scaled()
+        return self.test_coverage * (self.infectious + self.critical_over())
         
     def critical_cared_scaled(self):
-        return self.test_coverage * self.critical_cared()
+        return self.critical_cared()
         
     def infectious_all_scaled(self):
-        return self.test_coverage * self.infectious_all()
+        return self.infectious_scaled() + self.critical_cared_scaled()
         
     def recovered_scaled(self):
-        return self.test_coverage * self.recovered
+        return self.test_coverage * self.recovered_normal + self.recovered_critical
         
     def dead_scaled(self):
-        return self.test_coverage * self.dead()
+        return self.test_coverage * self.dead_over + self.dead_normal
         
     def infected_scaled(self):
-        return self.infectious_scaled() + self.critical_cared_scaled() + self.recovered_scaled() + self.dead_scaled()
+        return self.infectious_all_scaled() + self.recovered_scaled() + self.dead_scaled()
     
     def daily_susceptible(self):
         return util.delta(self.susceptible)
@@ -91,8 +92,14 @@ class SeicrdRlcModelResult:
     def daily_infectious_all(self):
         return util.delta(self.infectious_all())
         
+    def daily_recovered_normal(self):
+        return util.delta(self.recovered_normal)
+        
+    def daily_recovered_critical(self):
+        return util.delta(self.recovered_critical)
+        
     def daily_recovered(self):
-        return util.delta(self.recovered)
+        return util.delta(self.recovered())
         
     def daily_dead_normal(self):
         return util.delta(self.dead_normal)
@@ -172,9 +179,9 @@ class SeicrdRlcModel(BaseModel):
                     death_rate_normal, death_chance_normal, 
                     death_rate_over, death_chance_over, kapasitas_rs):
                     
-        population_y, susceptible, exposed_normal, exposed_over, infectious, critical, recovered, dead_normal, dead_over = y
-        y_name = ("population", "susceptible", "exposed_normal", "exposed_over", "infectious", "critical", "recovered", "dead_normal", "dead_over")
-        population_y, susceptible, exposed_normal, exposed_over, infectious, critical, recovered, dead_normal, dead_over = [util.sanity_check_init(*args) for args in zip(y_name, y)]
+        population_y, susceptible, exposed_normal, exposed_over, infectious, critical, recovered_normal, recovered_critical, dead_normal, dead_over = y
+        y_name = ("population", "susceptible", "exposed_normal", "exposed_over", "infectious", "critical", "recovered_normal", "recovered_critical", "dead_normal", "dead_over")
+        population_y, susceptible, exposed_normal, exposed_over, infectious, critical, recovered_normal, recovered_critical, dead_normal, dead_over = [util.sanity_check_init(*args) for args in zip(y_name, y)]
         
         exposed_flow_normal = exposed_rate_normal(t) * susceptible * infectious / population
         
@@ -212,15 +219,16 @@ class SeicrdRlcModel(BaseModel):
         dEOdt = exposed_flow_over - infectious_flow_over
         dIdt = infectious_flow_normal + infectious_flow_over - recovery_flow_normal - critical_flow
         dCdt = critical_flow - recovery_flow_critical - death_flow_normal - death_flow_over
-        dRdt = recovery_flow_normal + recovery_flow_critical
+        dRNdt = recovery_flow_normal
+        dRCdt = recovery_flow_critical
         dDNdt = death_flow_normal
         dDOdt = death_flow_over
-        dPdt = dSdt + dENdt + dEOdt + dIdt + dCdt + dRdt + dDNdt + dDOdt
+        dPdt = dSdt + dENdt + dEOdt + dIdt + dCdt + dRNdt + dRCdt + dDNdt + dDOdt
         '''
         if dPdt != 0:
             raise Exception("Population must not change: %f" % (dPdt,))
         '''
-        dydt = dPdt, dSdt, dENdt, dEOdt, dIdt, dCdt, dRdt, dDNdt, dDOdt
+        dydt = dPdt, dSdt, dENdt, dEOdt, dIdt, dCdt, dRNdt, dRCdt, dDNdt, dDOdt
         
         check_result = [util.sanity_check_y(*args) for args in zip(y_name, y, dydt)]
         
@@ -271,9 +279,9 @@ class SeicrdRlcModel(BaseModel):
         def r0_over(critical_over):
             return exposed_rate_over * death_time_over * critical_chance * (critical_over/population)
 
-        population_init, susceptible_init, exposed_normal_init, exposed_over_init, infectious_init, critical_init, recovered_init, dead_normal_init, dead_over_init = population, population-1, 1, 0, 0, 0, 0, 0, 0  # initial conditions: one exposed, rest susceptible
+        population_init, susceptible_init, exposed_normal_init, exposed_over_init, infectious_init, critical_init, recovered_normal_init, recovered_critical_init, dead_normal_init, dead_over_init = population, population-1, 1, 0, 0, 0, 0, 0, 0, 0  # initial conditions: one exposed, rest susceptible
         
-        y0 = population_init, susceptible_init, exposed_normal_init, exposed_over_init, infectious_init, critical_init, recovered_init, dead_normal_init, dead_over_init # Initial conditions tuple
+        y0 = population_init, susceptible_init, exposed_normal_init, exposed_over_init, infectious_init, critical_init, recovered_normal_init, recovered_critical_init, dead_normal_init, dead_over_init # Initial conditions tuple
 
         
         # Integrate the SIR equations over the time grid, t.
@@ -302,7 +310,7 @@ class SeicrdRlcModel(BaseModel):
         ))
         retT = sol.sol(t)
         '''
-        population_2, susceptible, exposed_normal, exposed_over, infectious, critical, recovered,  dead_normal, dead_over = retT
+        population_2, susceptible, exposed_normal, exposed_over, infectious, critical, recovered_normal, recovered_critical,  dead_normal, dead_over = retT
         
         kapasitas_rs_val = util.map_function(t, self.kabko.kapasitas_rs)
         #kapasitas_rs_val = np.zeros(days)
@@ -319,7 +327,7 @@ class SeicrdRlcModel(BaseModel):
         #r0_normal_val = np.zeros(days)
         #r0_over_val = np.zeros(days)
         
-        return SeicrdRlcModelResult(t, population_2, susceptible, exposed_normal, exposed_over, infectious, critical, recovered, dead_normal, dead_over, mortality_rate_val, r0_normal_val, kapasitas_rs_val, r0_over_val, test_coverage_val)
+        return SeicrdRlcModelResult(t, population_2, susceptible, exposed_normal, exposed_over, infectious, critical, recovered_normal, recovered_critical, dead_normal, dead_over, mortality_rate_val, r0_normal_val, kapasitas_rs_val, r0_over_val, test_coverage_val)
         
     
     def _fitter(self, ret):

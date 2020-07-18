@@ -46,10 +46,10 @@ class ModelPlotter:
         return fig
         
     def plot_main(self, ax):
-        self._plot_main(ax, self.result.t, susceptible=self.result.susceptible, exposed=self.result.exposed(), infectious=self.result.infectious, critical=self.result.critical, recovered=self.result.recovered, dead=self.result.dead(), kapasitas_rs=self.result.kapasitas_rs, population=self.result.population, title="Main (Total)")
+        self._plot_main(ax, self.result.t, susceptible=self.result.susceptible, exposed=self.result.exposed(), infectious=self.result.infectious, critical=self.result.critical, recovered=self.result.recovered(), dead=self.result.dead(), kapasitas_rs=self.result.kapasitas_rs, population=self.result.population, title="Main (Total)")
         
     def plot_main_lite(self, ax):
-        self._plot_main(ax, self.result.t, exposed=self.result.exposed(), infectious=self.result.infectious, critical=self.result.critical, recovered=self.result.recovered, dead=self.result.dead(), kapasitas_rs=self.result.kapasitas_rs, title="Main (Total, Lite)")
+        self._plot_main(ax, self.result.t, exposed=self.result.exposed(), infectious=self.result.infectious, critical=self.result.critical, recovered=self.result.recovered(), dead=self.result.dead(), kapasitas_rs=self.result.kapasitas_rs, title="Main (Total, Lite)")
     
     def plot_main_data(self, ax, data, data_length=None):
         self._plot_data(
