@@ -2,6 +2,7 @@ from core import util, database
 from itertools import accumulate
 import numpy as np
 from core.modeling import SeicrdRlcModel, SeicrdRlExtModel, SeicrdRlModel, SeicrdRModel, SeicrdModel, SeirdModel, BaseModel
+import math
         
 class KabkoData:
     def __init__(self, kabko, text, population, outbreak_shift, first_positive, data, kapasitas_rs, rt, params):
@@ -205,7 +206,7 @@ class KabkoData:
         mod.set_param_hint("population", value=self.population, vary=False)
         
         for p in util.filter_dict(self.params, params_needed).values():
-            vary = p.vary and p.min != p.max
+            vary = p.vary and not math.isclose(p.min, p.max, abs_tol=1e-13, rel_tol=1e-13)
             if vary:
                 mod.set_param_hint(p.parameter, value=p.init, min=p.min, max=p.max, vary=True, expr=p.expr)
             else:
