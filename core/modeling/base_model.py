@@ -75,7 +75,8 @@ class BaseModel:
         
         fit_result = self.___fit(mod, x_data_0_flat, y_data_0.flatten(), params, method="leastsq", days=days)
         #model_result = self.model(**fit_result.values)
-        fit_scorer=BaseScorer(y_data_0.flatten(), fit_result.best_fit)
+        pred_data_0 = self.fitter(**fit_result.values)
+        fit_scorer=BaseScorer(y_data_0, pred_data_0)
         datasets = self.datasets
         
         return FittingResult(self, fit_result, datasets, test_scorer, fit_scorer, outbreak_shift)
@@ -109,7 +110,7 @@ class BaseModel:
         
         fit_result = self.___fit(mod, x_data_train.flatten(), y_data_train.flatten(), params, method=method, days=days)
         
-        pred_data_test = self.fitter_flat(x_data_test, **fit_result.values)
+        pred_data_test = [pred[ts_index] for pred in self.fitter(**fit_result.values)]
         
         return BaseScorer(y_data_test, pred_data_test)
         
