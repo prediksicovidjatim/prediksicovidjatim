@@ -6,7 +6,7 @@ from .base_model import BaseModel
 import math
 
 class SeicrdRlcModelResult:
-    def __init__(self, t, population, susceptible, exposed_normal, exposed_over, infectious, critical, recovered_normal, recovered_critical, dead_normal, dead_over, mortality_rate, r0_normal, kapasitas_rs, r0_over, test_coverage):
+    def __init__(self, t, population, susceptible, exposed_normal, exposed_over, infectious, critical, recovered_normal, recovered_critical, dead_normal, dead_over, mortality_rate, r0_normal, kapasitas_rs, r0_over, r0_overall, test_coverage):
         self.t = t
         self.population = population
         self.susceptible = susceptible
@@ -22,18 +22,14 @@ class SeicrdRlcModelResult:
         self.r0_normal = r0_normal
         self.kapasitas_rs = kapasitas_rs
         self.r0_over = r0_over
+        self.r0_overall = r0_overall
         self.test_coverage = test_coverage
-        
-    def r0_overall(self):
-        return self.r0_normal + self.r0_over
         
     def exposed(self):
         return self.exposed_normal + self.exposed_over
         
     def critical_cared(self):
-        ret = self.critical[:]
-        return np.clip(ret, a_min=None, a_max=self.kapasitas_rs)
-        
+        return SeicrdRlcModel.critical_cared(self.critical, self.kapasitas_rs)
         
     def critical_over(self):
         return SeicrdRlcModel.critical_over(self.critical, self.kapasitas_rs)
@@ -46,6 +42,9 @@ class SeicrdRlcModelResult:
         
     def dead(self):
         return self.dead_normal + self.dead_over
+        
+    def over(self):
+        return self.critical_over() + self.dead_over
         
     def infectious_scaled(self):
         return self.test_coverage * (self.infectious + self.critical_over())
@@ -109,6 +108,9 @@ class SeicrdRlcModelResult:
         
     def daily_dead(self):
         return util.delta(self.dead())
+        
+    def daily_over(self):
+        return tuil.delta(self.over())
     
     def daily_infectious_scaled(self):
         return util.delta(self.infectious_scaled())
@@ -154,17 +156,21 @@ class SeicrdRlcModelResult:
         return np.array([self.get_dataset(k, shift) for k in datasets])
         
 class SeicrdRlcModel(BaseModel):
-    params = ["incubation_period",
-                    "critical_chance", "critical_time", 
-                    "recovery_time_normal", "recovery_time_critical",
-                    "death_chance_normal", "death_time_normal",
-                    "death_chance_over", "death_time_over", 
-                    "r_over", "k", "kapasitas_rs_mul",
+    params = ["infectious_rate",
+                    "critical_chance", "critical_rate", 
+                    "recovery_rate_normal", "recovery_rate_critical",
+                    "death_chance_normal", "death_rate_normal",
+                    "death_chance_over", "death_rate_over", 
+                    "exposed_rate_over", "k", "kapasitas_rs_mul",
                     "test_coverage_0", "test_coverage_increase", "test_coverage_max"]
                     
     def __init__(self, kabko):
         super().__init__(kabko) 
         self.prev_dydt = None
+    
+    def critical_cared(critical, kapasitas_rs):
+        ret = critical[:]
+        return np.clip(ret, a_min=None, a_max=kapasitas_rs)
     
     def critical_over(critical, kapasitas_rs):
         ret = critical-kapasitas_rs
@@ -197,8 +203,14 @@ class SeicrdRlcModel(BaseModel):
         critical_cared = min(kapasitas_rs_val, critical)
         critical_over = max(0, critical-critical_cared)
         
+        
+        if critical_over > 0 and critical_cared < kapasitas_rs_val:
+            raise Exception("There can't be critical_over if critical_cared is below kapasitas_rs_val")
+        
         exposed_flow_over = exposed_rate_over * susceptible * critical_over / population
         recovery_flow_critical = recovery_rate_critical * critical_cared * (1.0-death_chance_normal)
+        
+        
         
         if recovery_flow_normal > infectious:
             raise Exception("There can't be more people recovering than infected people. (%f, %f, %f. %f)" % (recovery_rate_normal, critical_chance, recovery_flow_normal, infectious))
@@ -209,6 +221,9 @@ class SeicrdRlcModel(BaseModel):
         
         death_flow_normal = death_rate_normal * critical_cared * death_chance_normal
         death_flow_over = death_rate_over * critical_over * death_chance_over
+        
+        if death_flow_over > 0 and critical_cared < kapasitas_rs_val:
+            raise Exception("There can't be death_flow_over if critical_cared is below kapasitas_rs_val")
         
         flow = exposed_flow_normal, exposed_flow_over, infectious_flow_normal, infectious_flow_over, recovery_flow_normal, recovery_flow_critical, death_flow_normal, death_flow_over, critical_flow
         flow_name = ("exposed_flow_normal", "exposed_flow_over", "infectious_flow_normal", "infectious_flow_over", "recovery_flow_normal", "recovery_flow_critical", "death_flow_normal", "death_flow_over", "critical_flow")
@@ -236,12 +251,12 @@ class SeicrdRlcModel(BaseModel):
         
         return dydt
         
-    def model(self, days, incubation_period,
-                    critical_chance, critical_time, 
-                    recovery_time_normal, recovery_time_critical,
-                    death_chance_normal, death_time_normal,
-                    death_chance_over, death_time_over, 
-                    r_over, k, kapasitas_rs_mul,
+    def model(self, days, infectious_rate,
+                    critical_chance, critical_rate, 
+                    recovery_rate_normal, recovery_rate_critical,
+                    death_chance_normal, death_rate_normal,
+                    death_chance_over, death_rate_over, 
+                    exposed_rate_over, k, kapasitas_rs_mul,
                     test_coverage_0, test_coverage_increase, test_coverage_max,
                     **kwargs):
         days = int(days)
@@ -254,14 +269,15 @@ class SeicrdRlcModel(BaseModel):
         population = self.kabko.population
         
         # this is derived parameter
-        infectious_period_opt = recovery_time_normal * (1-critical_chance) + critical_time * critical_chance #this is derived parameter
-        exposed_rate_over = r_over / death_time_over
-        infectious_rate = 1.0 / incubation_period # this is derived parameter
-        recovery_rate_normal = 1.0 / recovery_time_normal # this is derived parameter
-        death_rate_normal = 1.0 / death_time_normal # this is derived parameter
-        critical_rate = 1.0 / critical_time # this is derived parameter
-        recovery_rate_critical = 1.0 / recovery_time_critical #this is derived parameter
-        death_rate_over = 1.0/death_time_over # this is a derived parameter
+        #infectious_period_opt = recovery_time_normal * (1-critical_chance) + critical_time * critical_chance #this is derived parameter
+        infectious_leave_rate_opt = recovery_rate_normal * (1-critical_chance) + critical_rate * critical_chance
+        #exposed_rate_over = r_over / death_rate_over
+        #infectious_rate = 1.0 / incubation_period # this is derived parameter
+        #recovery_rate_normal = 1.0 / recovery_time_normal # this is derived parameter
+        #death_rate_normal = 1.0 / death_time_normal # this is derived parameter
+        #critical_rate = 1.0 / critical_time # this is derived parameter
+        #recovery_rate_critical = 1.0 / recovery_time_critical #this is derived parameter
+        #death_rate_over = 1.0/death_time_over # this is a derived parameter
         
         def kapasitas_rs(t):
             return self.kabko.kapasitas_rs(t) * kapasitas_rs_mul
@@ -273,11 +289,32 @@ class SeicrdRlcModel(BaseModel):
             return self.kabko.logistic_rt(r_0, rt_delta, t, k)
 
         def exposed_rate_normal(t):
-            ret = logistic_rt(t) / infectious_period_opt
+            rt = logistic_rt(t)
+            #ret = rt * recovery_rate_normal * (1-critical_chance) + rt * critical_rate * critical_chance
+            ret = rt * infectious_leave_rate_opt
+            #ret = logistic_rt(t) / infectious_period_opt
             return ret
         
+        _r0_over = exposed_rate_over / death_rate_over
+        def r0_normal(t, infectious):
+            return logistic_rt(t) if infectious > 0 else 0
+            
         def r0_over(critical_over):
-            return exposed_rate_over * death_time_over * critical_chance * (critical_over/population)
+            return _r0_over if critical_over > 0 else 0
+            
+        def r0_overall(t, infectious, critical_over):
+            #return exposed_rate_over / death_rate_over# * critical_chance * (critical_over/population)
+            tot = infectious+critical_over
+            if tot == 0: 
+                return 0
+            elif infectious == 0:
+                return r0_over(critical_over)
+            elif critical_over == 0:
+                return r0_normal(t, infectious)
+            else:
+                nor = exposed_rate_normal(t) / infectious_leave_rate_opt * infectious/tot
+                over = exposed_rate_over / death_rate_over * critical_over/tot
+                return nor + over
 
         population_init, susceptible_init, exposed_normal_init, exposed_over_init, infectious_init, critical_init, recovered_normal_init, recovered_critical_init, dead_normal_init, dead_over_init = population, population-1, 1, 0, 0, 0, 0, 0, 0, 0  # initial conditions: one exposed, rest susceptible
         
@@ -312,7 +349,7 @@ class SeicrdRlcModel(BaseModel):
         '''
         population_2, susceptible, exposed_normal, exposed_over, infectious, critical, recovered_normal, recovered_critical,  dead_normal, dead_over = retT
         
-        kapasitas_rs_val = util.map_function(t, self.kabko.kapasitas_rs)
+        kapasitas_rs_val = util.map_function(t, kapasitas_rs)
         #kapasitas_rs_val = np.zeros(days)
         
         exposed = util.sum_element(exposed_normal, exposed_over)
@@ -321,13 +358,14 @@ class SeicrdRlcModel(BaseModel):
         #mortality_rate_val = np.zeros(days)
         
         test_coverage_val = util.map_function(t, test_coverage)
-        r0_normal_val = util.map_function(t, logistic_rt)
+        r0_normal_val = util.map_function(zip(t, infectious), r0_normal, unpack=True)
         critical_over = SeicrdRlcModel.critical_over(critical, kapasitas_rs_val)
         r0_over_val = util.map_function(critical_over, r0_over)
+        r0_overall_val = util.map_function(zip(t, infectious, critical_over), r0_overall, unpack=True)
         #r0_normal_val = np.zeros(days)
         #r0_over_val = np.zeros(days)
         
-        return SeicrdRlcModelResult(t, population_2, susceptible, exposed_normal, exposed_over, infectious, critical, recovered_normal, recovered_critical, dead_normal, dead_over, mortality_rate_val, r0_normal_val, kapasitas_rs_val, r0_over_val, test_coverage_val)
+        return SeicrdRlcModelResult(t, population_2, susceptible, exposed_normal, exposed_over, infectious, critical, recovered_normal, recovered_critical, dead_normal, dead_over, mortality_rate_val, r0_normal_val, kapasitas_rs_val, r0_over_val, r0_overall_val, test_coverage_val)
         
     
     def _fitter(self, ret):

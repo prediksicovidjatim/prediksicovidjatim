@@ -1,4 +1,4 @@
-from sklearn.metrics import explained_variance_score, max_error, mean_absolute_error, mean_squared_error, mean_squared_log_error, median_absolute_error, r2_score, mean_tweedie_deviance
+from sklearn.metrics import explained_variance_score, max_error, mean_absolute_error, mean_squared_error, mean_squared_log_error, median_absolute_error, r2_score, mean_tweedie_deviance, r2_score
 import numpy as np
 from core import util
 
@@ -16,12 +16,6 @@ class BaseScorer:
     def normalize(self, population):
         return BaseScorer(self.data, self.pred)
         
-    def explained_variance_score(self, *args, **kwargs):
-        return explained_variance_score(self.data, self.pred, *args, **kwargs)
-        
-    def max_error(self, *args, **kwargs):
-        return max_error(self.data, self.pred, *args, **kwargs)
-    
     def mean_absolute_error(self, *args, **kwargs):
         return mean_absolute_error(self.data, self.pred, *args, **kwargs)
     
@@ -30,7 +24,13 @@ class BaseScorer:
     
     def mean_squared_log_error(self, *args, **kwargs):
         return mean_squared_log_error(self.data, self.pred, *args, **kwargs)
-    
+        
+    def explained_variance_score(self, *args, **kwargs):
+        return explained_variance_score(self.data, self.pred, *args, **kwargs)
+        
+    def max_error(self, *args, **kwargs):
+        return max_error(self.data, self.pred, *args, **kwargs)
+        
     def median_absolute_error(self, *args, **kwargs):
         return mean_squared_log_error(self.data, self.pred, *args, **kwargs)
     
@@ -45,9 +45,6 @@ class BaseScorer:
     
     def mean_gamma_deviance(self, *args, **kwargs):
         return self.mean_tweedie_deviance(power=2, *args, **kwargs)
-        
-    def mean_absolute_percentage_error(self):
-        return 100 / len(self.data) * (self.data-self.pred)/self.data
         
     def concatenate(scorers):
         data = np.concatenate([r.data for r in scorers])

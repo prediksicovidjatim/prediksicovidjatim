@@ -189,7 +189,9 @@ def check_finite(retT):
     if len(not_finite) > 0:
         raise Exception("Not finite: " + str(not_finite))
         
-def map_function(t, f):
+def map_function(t, f, unpack=False):
+    if unpack:
+        return np.array([f(*ti) for ti in t])
     return np.array([f(ti) for ti in t])
     
 def get_kwargs_rt(kwargs, count):

@@ -13,7 +13,7 @@ class ModelPlotter:
         if self.result.r0_over is not None:
             ax.plot(self.result.t, self.result.r0_over, 'r', alpha=0.5, linewidth=2, label='R0 over')
         if self.result.r0_overall is not None:
-            ax.plot(self.result.t, self.result.r0_overall(), 'orange', alpha=0.7, linewidth=2, label='R0 overall')
+            ax.plot(self.result.t, self.result.r0_overall, 'orange', alpha=0.7, linewidth=2, label='R0 overall')
 
         ax.title.set_text('R0 over time')
         
@@ -28,14 +28,30 @@ class ModelPlotter:
             ax.plot(self.result.t, self.result.critical_over(), 'orange', alpha=0.7, linewidth=2, label="Critical but Neglected")
         if self.result.dead_over is not None:
             ax.plot(self.result.t, self.result.dead_over, 'black', alpha=0.7, linewidth=2, label='Dead by Neglect')
+        if self.result.over is not None:
+            ax.plot(self.result.t, self.result.over(), 'grey', alpha=0.7, linewidth=2, label='Total Over')
         
         ax.title.set_text('Insufficient Healthcare')
         
+    def plot_dead(self, ax):
+        if self.result.dead_normal is not None:
+            ax.plot(self.result.t, self.result.dead_normal, 'blue', alpha=0.7, linewidth=2, label='Dead (Normal)')
+        if self.result.dead_over is not None:
+            ax.plot(self.result.t, self.result.dead_over, 'red', alpha=0.7, linewidth=2, label="Dead by Neglect")
+        if self.result.dead is not None:
+            ax.plot(self.result.t, self.result.dead(), 'black', alpha=0.7, linewidth=2, label='Dead (Total)')
+        
+        ax.title.set_text('Death')
+        
     def plot_healthcare(self, ax):
+        if self.result.critical is not None:
+            ax.plot(self.result.t, self.result.critical, 'orange', alpha=0.7, linewidth=2, label='Critical')
         if self.result.critical_cared is not None:
             ax.plot(self.result.t, self.result.critical_cared(), 'blue', alpha=0.7, linewidth=2, label='Critical cared')
+        if self.result.critical_over is not None:
+            ax.plot(self.result.t, self.result.critical_over(), 'red', alpha=0.7, linewidth=2, label='Critical over')
         if self.result.kapasitas_rs is not None:
-            ax.plot(self.result.t, self.result.kapasitas_rs, 'orange', alpha=0.7, linewidth=2, label="Healthcare Limit")
+            ax.plot(self.result.t, self.result.kapasitas_rs, 'grey', alpha=0.7, linewidth=2, label="Healthcare Limit")
         
         ax.title.set_text('Healthcare limit')
         

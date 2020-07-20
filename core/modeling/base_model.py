@@ -34,7 +34,7 @@ class BaseModel:
         mod = lmfit.Model(self.fitter_flat)
         
         outbreak_shift = outbreak_shift or self.kabko.outbreak_shift(
-            self.kabko.params["incubation_period"].init
+            1.0/self.kabko.params["infectious_rate"].init
         )
         
         days = self.kabko.data_days(outbreak_shift)
@@ -56,7 +56,8 @@ class BaseModel:
         
         
         for u in unvary:
-            params[u].vary = False
+            if u in params:
+                params[u].vary = False
         
         repeated_results = []
         full_index = np.linspace(0, len_y_0_0 - 1, len_y_0_0, dtype=int)
