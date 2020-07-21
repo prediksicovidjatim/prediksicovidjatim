@@ -1,18 +1,13 @@
 from core import util
 
 class KapasitasRSRaw:
-    def __init__(self, kabko, tanggal, vent, tanpa_vent, biasa):
+    def __init__(self, kabko, tanggal, kapasitas):
         self.kabko = kabko
         self.tanggal = util.parse_date(tanggal.split(" ")[0]) if isinstance(tanggal, str) else tanggal
-        self.vent = util.parse_int(vent) if isinstance(vent, str) else vent
-        self.tanpa_vent = util.parse_int(tanpa_vent) if isinstance(tanpa_vent, str) else tanpa_vent
-        self.biasa = util.parse_int(biasa) if isinstance(biasa, str) else biasa
+        self.kapasitas = util.parse_int(kapasitas) if isinstance(kapasitas, str) else kapasitas
         
     def tuple(self):
-        return self.kabko, self.tanggal, self.vent, self.tanpa_vent, self.biasa
-        
-    def total(self):
-        return self.vent + self.tanpa_vent + self.biasa
+        return self.kabko, self.tanggal, self.kapasitas
         
     def add(self, kap):
         assert self is not kap 
@@ -20,9 +15,7 @@ class KapasitasRSRaw:
         assert self.kabko == kap.kabko 
         
         self.tanggal = max(self.tanggal, kap.tanggal)    
-        self.vent += kap.vent
-        self.tanpa_vent += kap.tanpa_vent
-        self.biasa += kap.biasa
+        self.kapasitas += kap.kapasitas
         
     def __hash__(self):
         return hash(self.kabko)
@@ -32,7 +25,7 @@ class KapasitasRSRaw:
             return True
         if not isinstance(other, KapasitasRSRaw):
             return False
-        return self.kabko == other.kabko and self.vent == other.vent and self.tanpa_vent == other.tanpa_vent and self.biasa == other.biasa
+        return self.kabko == other.kabko and self.kapasitas==other.kapasitas
         
 class KapasitasRSCollection:
     def __init__(self):

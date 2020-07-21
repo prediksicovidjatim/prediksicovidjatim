@@ -280,7 +280,14 @@ class SeicrdRlcModel(BaseModel):
         #death_rate_over = 1.0/death_time_over # this is a derived parameter
         
         def kapasitas_rs(t):
-            return self.kabko.kapasitas_rs(t) * kapasitas_rs_mul
+            kap = self.kabko.kapasitas_rs(t)
+            '''
+            if kapasitas_rs_mul != 1:
+                raise Exception("kapasitas_rs_mul must be 1")
+            if kap != 1352:
+                raise Exception("kap must be 1352")
+            '''
+            return kap * kapasitas_rs_mul
         
         def test_coverage(t):
             return min(test_coverage_max, test_coverage_0 + test_coverage_increase * t)
@@ -315,8 +322,9 @@ class SeicrdRlcModel(BaseModel):
                 nor = exposed_rate_normal(t) / infectious_leave_rate_opt * infectious/tot
                 over = exposed_rate_over / death_rate_over * critical_over/tot
                 return nor + over
-
-        population_init, susceptible_init, exposed_normal_init, exposed_over_init, infectious_init, critical_init, recovered_normal_init, recovered_critical_init, dead_normal_init, dead_over_init = population, population-1, 1, 0, 0, 0, 0, 0, 0, 0  # initial conditions: one exposed, rest susceptible
+        
+        seed = self.kabko.seed
+        population_init, susceptible_init, exposed_normal_init, exposed_over_init, infectious_init, critical_init, recovered_normal_init, recovered_critical_init, dead_normal_init, dead_over_init = population, population-seed, seed, 0, 0, 0, 0, 0, 0, 0  # initial conditions: one exposed, rest susceptible
         
         y0 = population_init, susceptible_init, exposed_normal_init, exposed_over_init, infectious_init, critical_init, recovered_normal_init, recovered_critical_init, dead_normal_init, dead_over_init # Initial conditions tuple
 

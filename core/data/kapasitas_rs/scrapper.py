@@ -16,9 +16,9 @@ class KapasitasRSScrapper:
         args = (
             row[2].text, 
             util.parse_date(row[0].text.split(" ")[0]), 
-            util.parse_int(row[5].text), 
-            util.parse_int(row[8].text), 
-            util.parse_int(row[11].text)
+            util.parse_int(row[5].text)
+                + util.parse_int(row[8].text)
+                + util.parse_int(row[11].text)
         )
         return KapasitasRSRaw(*args)
             

@@ -60,7 +60,7 @@ def _fetch_kapasitas_rs(kabko, cur):
     cur.execute("""
         SELECT 
             tanggal,
-            (vent+tanpa_vent+biasa) AS kapasitas
+            kapasitas
         FROM main.kapasitas_rs
         WHERE kabko=%s
         ORDER BY tanggal
@@ -103,9 +103,10 @@ def _get_kabko(kabko, cur):
             text,
             population,
             outbreak_shift,
-            tanggal AS first_positive
-        FROM main.kabko k, main.first_pos_date fpd
-        WHERE k.kabko=fpd.kabko AND k.kabko=%s
+            fpd.tanggal AS first_positive,
+            rcd.pos_total AS seed
+        FROM main.kabko k, main.first_pos_date fpd, main.raw_covid_data rcd
+        WHERE k.kabko=fpd.kabko AND k.kabko=rcd.kabko AND rcd.tanggal=fpd.tanggal AND k.kabko=%s
     """, (kabko,))
     
     return (*cur.fetchone(),)

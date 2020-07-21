@@ -5,7 +5,7 @@ from core.modeling import SeicrdRlcModel, SeicrdRlExtModel, SeicrdRlModel, Seicr
 import math
         
 class KabkoData:
-    def __init__(self, kabko, text, population, outbreak_shift, first_positive, data, kapasitas_rs, rt, params):
+    def __init__(self, kabko, text, population, outbreak_shift, first_positive, seed, data, kapasitas_rs, rt, params):
         self.kabko = kabko
         self.text = text
         self.population = population
@@ -16,6 +16,7 @@ class KabkoData:
         self.set_rt(rt)
         
         self.set_first_positive(first_positive)
+        self.seed = seed
         
         self._kapasitas_rs = [(self.get_date_index(tanggal), kapasitas) for tanggal, kapasitas in kapasitas_rs]
         
