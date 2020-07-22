@@ -4,23 +4,29 @@ from core import util
 
 
 class BaseScorer:
-    def __init__(self, data, pred):
+    def __init__(self, data, pred, dely_conf, dely_pred):
         self.data = util.np_make_2d(data)
         self.pred = util.np_make_2d(pred)
-        self.row_count = len(self.data)
-        '''
+        self.dely_conf = dely_conf
+        self.dely_pred = dely_pred
         self.residual = data-pred
-        '''
-        
-        
-    def residual(self):
-        return self.data - self.pred
+        self.row_count = len(self.data)
         
     def flatten(self):
-        return BaseScorer(np.array([self.data.flatten()]), np.array([self.pred.flatten()]))
+        return BaseScorer(
+            np.array([self.data.flatten()]), 
+            np.array([self.pred.flatten()]), 
+            np.array([self.dely_conf.flatten()]),
+            np.array([self.dely_pred.flatten()])
+        )
         
-    def normalize(self, population):
-        return BaseScorer(self.data/population, self.pred/population)
+    def normalize(self, div):
+        return BaseScorer(
+            self.data/div, 
+            self.pred/div,
+            self.dely_conf/div,
+            self.dely_pred/div
+        )
         
     def map_function(self, f, *args, **kwargs):
         return np.array([f(self.data[i], self.pred[i], *args, **kwargs) for i in range(0, self.row_count)])

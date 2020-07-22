@@ -28,7 +28,7 @@ class BaseModel:
         self.last_result_flat = results_flat
         return results_flat[x]
     
-    def fit(self, method="leastsq", test_splits=[5,3], unvary=[], outbreak_shift=None):
+    def fit(self, method="leastsq", test_splits=[5,3], unvary=[], outbreak_shift=None, sigma=3):
         if len([x for x in test_splits if x <= 1]) > 0:
             raise ValueError("A split must be at least 2")
         mod = lmfit.Model(self.fitter_flat)
@@ -73,10 +73,13 @@ class BaseModel:
         
         test_scorer = BaseScorer.concatenate(repeated_results) if len(repeated_results) > 0 else None
         
-        fit_result = self.___fit(mod, x_data_0_flat, y_data_0.flatten(), params, method="leastsq", days=days)
+        fit_result = self.____fit(mod, x_data_0_flat, y_data_0.flatten(), params, days=days, method="leastsq")
         #model_result = self.model(**fit_result.values)
-        pred_data_0 = self.fitter(**fit_result.values)
-        fit_scorer=BaseScorer(y_data_0, pred_data_0)
+        #pred_data_0 = self.fitter(**fit_result.values)
+        pred_data_0 = util.np_split(fit_result.best_fit, set_count)
+        dely_conf_fit, dely_pred_fit = self._get_dely(fit_result, x_data_0_flat, set_count, sigma)
+        
+        fit_scorer=BaseScorer(y_data_0, pred_data_0, dely_conf_fit, dely_pred_fit)
         datasets = self.datasets
         
         return FittingResult(self, fit_result, datasets, test_scorer, fit_scorer, outbreak_shift)
@@ -89,8 +92,7 @@ class BaseModel:
             
         return BaseScorer.concatenate(results)
         
-        
-    def __fit(self, mod, y_data_0, params, split, method="leastsq"):
+    def __fit(self, mod, y_data_0, params, split, method="leastsq", sigma=3):
         
         tr_index, ts_index = split
         
@@ -107,19 +109,32 @@ class BaseModel:
         x_data_train = np.array([x[tr_index] for x in x_data_0])
         x_data_test = np.array([x[ts_index] for x in x_data_0])
         
+        x_data_train_flat = x_data_train.flatten()
         
-        fit_result = self.___fit(mod, x_data_train.flatten(), y_data_train.flatten(), params, method=method, days=days)
+        fit_result = self.___fit(mod, x_data_train.flatten(), y_data_train.flatten(), params, days=days, method=method)
         
-        pred_data_test = [pred[ts_index] for pred in self.fitter(**fit_result.values)]
+        #test_result = mod.eval(fit_result.params, x=x_data_test)
+        test_result = fit_result.eval(fit_result.params, method=method, x=x_data_test)
         
-        return BaseScorer(y_data_test, pred_data_test)
+        #pred_data_test = [pred[ts_index] for pred in self.fitter(**fit_result.values)]
+        pred_data_test = util.np_split(test_result, row_count)
+        dely_conf_test, dely_pred_test = self._get_dely(fit_result, x_data_test_flat, row_count, sigma)
         
+        return BaseScorer(y_data_test, pred_data_test, dely_conf_test, dely_pred_test)
         
-    def ___fit(self, mod, x_data, y_data, params, method="leastsq", days=None):
+    def _get_dely(self, fit_result, x_data, row_count, sigma=3):
+        dely_conf = fit_result.eval_uncertainty(x=x_data, sigma=3)
+        dely_pred = fit_result.eval_uncertainty(x=x_data, sigma=3, predict=True)
+        return util.np_split(dely_conf, row_count), util.np_split(dely_pred, row_count)
+    
+        
+    def ____fit(self, mod, x_data, y_data, params, days=None, method="leastsq"):
+        '''
         if days is None:
             days = len(x_data)
-        
-        params["days"].value = days
+        '''
+        if days is not None:
+            params["days"].value = days
         
         fit_result = mod.fit(y_data, params, method=method, x=x_data)
         

@@ -254,6 +254,9 @@ def _plot_single_pred(ax, t, pred, data=None, min=None, max=None, title=None, la
 def stdev(cov):
     return np.sqrt(np.diag(cov))
     
+def np_split(arr, split):
+    return np.array(np.split(arr, split))
+    
 def np_concat_2d(arrs):
     row = len(arrs[0])
     return np.array([np.concatenate([a[i] for a in arrs]) for i in range(0, row)])
