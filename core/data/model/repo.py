@@ -134,14 +134,14 @@ def _update_params_init(kabko, filtered_params, cur):
     cur.execute('''
         PREPARE update_params_init AS 
         UPDATE main.parameter_kabko 
-        SET init=$1 
-        WHERE "parameter"=$2
-            AND kabko=$3
+        SET init=$1, stderr=$2
+        WHERE "parameter"=$3
+            AND kabko=$4
     ''')
     database.execute_batch(
         cur, 
-        "EXECUTE update_params_init (%s, %s, %s)",
-        [(v, k, kabko) for k, v in filtered_params.items()]
+        "EXECUTE update_params_init (%s, %s, %s, %s)",
+        [(v.value, v.stderr, k, kabko) for k, v in filtered_params.items() if v.vary]
     )
     ret = cur.rowcount
     cur.execute("DEALLOCATE update_params_init")
@@ -158,14 +158,14 @@ def _update_rt_init(kabko, rts, cur):
     cur.execute('''
         PREPARE update_rt_init AS 
         UPDATE main.rt 
-        SET init=$1 
-        WHERE tanggal=$2
-            AND kabko=$3
+        SET init=$1, stderr=$2
+        WHERE tanggal=$3
+            AND kabko=$4
     ''')
     database.execute_batch(
         cur, 
-        "EXECUTE update_rt_init (%s, %s, %s)",
-        [(v, k, kabko) for k, v in rts]
+        "EXECUTE update_rt_init (%s, %s, %s, %s)",
+        [(v.value, v.stderr, k, kabko) for k, v in rts if v.vary]
     )
     cur.execute("DEALLOCATE update_rt_init")
     
