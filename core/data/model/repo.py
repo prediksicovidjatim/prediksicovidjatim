@@ -1,6 +1,7 @@
 from core import util, database
 from core.data.model.entities import KabkoData, DayData, ParamData, RtData
 from core.data.raw.repo import fetch_kabko, fetch_kabko_dict, get_latest_tanggal, get_oldest_tanggal
+from core.modeling import BaseModel
 
 def fetch_day_data(kabko, cur=None):
     if cur:
@@ -217,6 +218,24 @@ def _update_scores(kabko, datasets, scorer, test, cur):
     
     cur.execute(sql)
     
+    
+def init_weights(cur=None):
+    if cur:
+        return _init_weights(cur)
+    else:
+        with database.get_conn() as conn, conn.cursor() as cur:
+            return _init_weights(cur)
+    
+def _init_weights(cur):
+    cur.execute("""
+        SELECT 
+            dataset,
+            weight
+        FROM main.dataset
+    """)
+    
+    weights = dict(cur.fetchall())
+    BaseModel.dataset_weights = weights
     
 def save_fitting_result(fit_result, option="seicrd_rlc"):
     params_needed = KabkoData.get_params_needed(option)

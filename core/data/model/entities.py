@@ -3,6 +3,7 @@ from itertools import accumulate
 import numpy as np
 from core.modeling import SeicrdRlcModel, SeicrdRlExtModel, SeicrdRlModel, SeicrdRModel, SeicrdModel, SeirdModel, BaseModel
 import math
+from lmfit import Model, Parameters
         
 class KabkoData:
     def __init__(self, kabko, text, population, outbreak_shift, first_positive, seed, data, kapasitas_rs, rt, params):
@@ -202,24 +203,29 @@ class KabkoData:
         return ret
         
     def apply_params(self, mod, option="seicrd_rlc"):
+        if isinstance(mod, Model):
+            f = mod.set_param_hint
+        elif isinstance(mod, Parameters):
+            f = mod.add
+        
         params_needed = KabkoData.get_params_needed(option)
         
-        mod.set_param_hint("population", value=self.population, vary=False)
+        f("population", value=self.population, vary=False)
         
         for p in util.filter_dict(self.params, params_needed).values():
             vary = p.vary and not math.isclose(p.min, p.max, abs_tol=1e-13, rel_tol=1e-13)
             if vary:
-                mod.set_param_hint(p.parameter, value=p.init, min=p.min, max=p.max, vary=True, expr=p.expr)
+                f(p.parameter, value=p.init, min=p.min, max=p.max, vary=True, expr=p.expr)
             else:
-                mod.set_param_hint(p.parameter, value=p.init, vary=False, expr=p.expr)
+                f(p.parameter, value=p.init, vary=False, expr=p.expr)
             
-        mod.set_param_hint("r_0", value=self._rt_0[0].init, min=self._rt_0[0].min, max=self._rt_0[0].max, vary=True)
+        f("r_0", value=self._rt_0[0].init, min=self._rt_0[0].min, max=self._rt_0[0].max, vary=True)
         
         #test these
         if "_r" in option:
             for i in range(1, len(self._rt_0)):
                 cur = self._rt_0[i]
-                mod.set_param_hint(
+                f(
                     'r_%d' % (i,), 
                     value=cur.init,
                     min=cur.min,

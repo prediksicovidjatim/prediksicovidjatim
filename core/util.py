@@ -33,8 +33,9 @@ def sanity_check_init(name, y):
         if math.isclose(y, 0, abs_tol=config.FLOAT_TOLERANCE):
             return 0
         else:
-            raise Exception("%s can't be negative. (%f, %f)" % (name, y, config.FLOAT_TOLERANCE))
-    return y
+            pass
+            #raise Exception("%s can't be negative. (%f, %f)" % (name, y, config.FLOAT_TOLERANCE))
+    return y if y >= 0 else 0
     
 def sanity_check_flow(name, flow):
     if flow < 0:
@@ -273,6 +274,9 @@ def np_split(arr, split):
     
 def np_mean_2d(data):
     return np.array([np.mean(d) for d in data])
+    
+def np_multiply_2d(data, weights):
+    return np.array([weights[i] * data[i] for i in range(0, len(weights))])
     
 def np_concat_2d(arrs):
     row = len(arrs[0])
