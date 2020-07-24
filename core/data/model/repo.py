@@ -41,7 +41,8 @@ def _fetch_param_data(kabko, cur):
             pk.min,
             pk.max,
             p.vary,
-            p.expr
+            p.expr,
+            pk.stderr
         FROM main.parameter_kabko pk, main.parameter p
         WHERE pk.parameter=p.parameter AND kabko=%s
         ORDER BY pk.parameter
@@ -81,7 +82,8 @@ def _fetch_rt_data(kabko, cur):
             tanggal,
             init,
             min,
-            max
+            max,
+            stderr
         FROM main.rt
         WHERE kabko=%s
         ORDER BY tanggal
@@ -183,12 +185,54 @@ def _update_outbreak_shift(kabko, outbreak_shift, cur):
         WHERE kabko=%s
     """, (outbreak_shift, kabko,))
     
-def update_all(kabko, params, outbreak_shift, option="seicrd_rlc"):
+score_columns = ["residual_mean", "residual_median", "max_error", "mae", "mse", "rmse", "rmsle", "explained_variance", "r2", "r2_adj", "smape", "mase", "chi2", "redchi", "aic", "aicc", "bic", "dw", "residual_normal", "residual_runs", "pearson_data", "pearson_residual", "f_mean", "f_data", "f_residual", "ks_data", "ks_residual", "prediction_interval"]
+score_columns_2 = ["nvarys"] + score_columns
+score_updates = ["%s=EXCLUDED.%s" % (col, col) for col in score_columns_2]
+score_updates_str = ", ".join(score_updates)
+score_keys = ["kabko", "test", "dataset"]
+score_keys_str = ", ".join(score_keys)
+score_columns_full = score_keys + score_columns_2
+score_columns_full_str = ", ".join(score_columns_full)
+score_args_str = util.mogrify_value_template(len(score_columns_full))
+
+def update_scores(kabko, datasets, scorer, test, cur=None):
+    if cur:
+        return _update_scores(kabko, datasets, scorer, test, cur)
+    else:
+        with database.get_conn() as conn, conn.cursor() as cur:
+            return _update_scores(kabko, datasets, scorer, test, cur)
+            
+def _update_scores(kabko, datasets, scorer, test, cur):
+    test = 1 if test else 0
+    values = [datasets] + [len(datasets) * [scorer.nvarys]] + scorer.get_values(score_columns)
+    values = util.transpose_list_list(values)
+    keys = [kabko, test]
+    values = [keys + v for v in values]
+    score_args_str_full = ','.join(cur.mogrify(score_args_str, x).decode('utf-8') for x in values)
+    sql = """
+        INSERT INTO main.scores(%s) VALUES %s
+        ON CONFLICT (%s) DO UPDATE SET
+            %s
+    """ % (score_columns_full_str, score_args_str_full, score_keys_str, score_updates_str)
+    
+    cur.execute(sql)
+    
+    
+def save_fitting_result(fit_result, option="seicrd_rlc"):
     params_needed = KabkoData.get_params_needed(option)
+    params = fit_result.fit_result.params
+    kabko = fit_result.kabko
     filtered_params = util.filter_dict(params, params_needed)
+    outbreak_shift = fit_result.outbreak_shift
     rts = kabko.transform_rt_to_dates(kabko.get_kwargs_rt(params, "_r" in option))
+    
     with database.get_conn() as conn, conn.cursor() as cur:
         update_params_init(kabko.kabko, filtered_params, cur)
         update_rt_init(kabko.kabko, rts, cur)
         update_outbreak_shift(kabko.kabko, outbreak_shift, cur)
+        update_scores(kabko.kabko, fit_result.datasets, fit_result.fit_scorer, False, cur)
+        update_scores(kabko.kabko, ["flat"], fit_result.fit_scorer.flatten(), False, cur)
+        if fit_result.test_scorer:
+            update_scores(kabko.kabko, fit_result.datasets, fit_result.test_scorer, True, cur)
+            update_scores(kabko.kabko, ["flat"], fit_result.test_scorer.flatten(), True, cur)
         conn.commit()

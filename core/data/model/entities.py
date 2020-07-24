@@ -238,11 +238,12 @@ class DayData:
         self.dead = dead
         
 class RtData:
-    def __init__(self, tanggal, init, min=None, max=None):
+    def __init__(self, tanggal, init, min=None, max=None, stderr=None):
         self.tanggal = tanggal
         self.init = init
         self.min = min
         self.max = max
+        self.stderr = stderr
         
         """
             pars = Parameters()
@@ -256,11 +257,12 @@ class RtData:
         
         
 class ParamData:
-    def __init__(self, parameter, init, min=None, max=None, vary=True, expr=None):
+    def __init__(self, parameter, init, min=None, max=None, vary=True, expr=None, stderr=None):
         self.parameter = parameter
         self.init = init
         self.min = min
         self.max = max
         self.vary = False if vary==0 else True
         self.expr = expr
+        self.stderr = stderr
         

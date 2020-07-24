@@ -18,3 +18,5 @@ python-dotenv
 sklearn
 numdifftools
 lmfit
+statsmodels
+#numba

@@ -64,6 +64,12 @@ def parse_int(text):
         except ValueError as ex2:
             raise
     return val
+    
+def get_obj_attr(obj, attr):
+    ret = getattr(obj, attr)
+    if callable(ret):
+        ret = ret()
+    return ret
 
 def mogrify_value_template(n):
     return "("+ ",".join(n*("%s",))+")"
@@ -222,6 +228,14 @@ def get_if_exists(d, index):
         return d[index]
     return None
     
+def transpose_dict_list(ld):
+    example = ld[0]
+    return {k:[ldi[k] for ldi in ld] for k in example.keys()}
+    
+def transpose_list_list(ll):
+    row_count = len(ll)
+    col_count = len(ll[0])
+    return [[ll[i][j] for i in range(0, row_count)] for j in range(0, col_count)]
     
 def plot_single(t, data, title=None, label=None, color='blue'):
     fig, ax = plt.subplots(1, 1)
@@ -257,9 +271,16 @@ def stdev(cov):
 def np_split(arr, split):
     return np.array(np.split(arr, split))
     
+def np_mean_2d(data):
+    return np.array([np.mean(d) for d in data])
+    
 def np_concat_2d(arrs):
     row = len(arrs[0])
     return np.array([np.concatenate([a[i] for a in arrs]) for i in range(0, row)])
+    
+def np_f_2d(arrs, f):
+    row = len(arrs[0])
+    return np.array([f([a[i] for a in arrs]) for i in range(0, row)])
     
 def np_make_2d(data):
     if not isinstance(data, np.ndarray):
