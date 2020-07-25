@@ -37,6 +37,9 @@ def notebook(request, nb_path):
     return render(request, "notebook.html", {"nb_path": nb_path})
     
 
+def map(request):
+    return render(request, "map.html")
+
 def kabko(request):
     kabko = request.GET.getlist('kabko')
     if kabko and len(kabko) > 0 and kabko[0]:

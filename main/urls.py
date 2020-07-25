@@ -22,4 +22,5 @@ urlpatterns = [
     path("grafik/", web.views.kabko),
     path("grafik/<str:kabko>", web.views.grafik),
     path("about/", web.views.about),
+    path("map/", web.views.map),
 ]
