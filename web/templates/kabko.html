@@ -2,11 +2,12 @@
 {% load static %}
 
 {% block content %}
-<div class="flex jumbotron jumbotron-fluid flex-grow align-items-center justify-content-center">
-  <div class=" container text-center center">
-	<h1 class="display-3">Grafik Prediksi</h1>
+
+<div class="jumbotron text-center corner-0 pt-5 pb-0 px-0">
+  <div class="container-fluid">
+	<h1 class="display-3">Model Prediksi</h1>
 	<p class="lead">Silahkan pilih Kabupaten/Kota.</p>
-	<div class="dropdown show">
+	<div class="dropdown show mb-4">
 		<a class="btn btn-secondary dropdown-toggle btn-lg" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 			Kabupaten/Kota
 		</a>
@@ -17,18 +18,147 @@
 			{% endfor %}
 		</div>
 	</div>
-	<!--
-	<form class=" needs-validation">
-		<div class="input-group mx-auto kabko-select">
-			<select class="form-control form-control-lg" name="kabko" id="kabko-select" required>
-				<option value="{{key}}">{{value}}</option>
-			</select>
-			<div class="input-group-append">
-				<button type="submit" class="input-group-text btn-lg text-lg" id="btn-submit">Submit</button>
-			</div>
-		</div>
-	</form>
-	-->
+	<ul class="nav nav-tabs justify-content-center mt-5" id="myTab" role="tablist">
+		<li class="nav-item">
+			<a class="nav-link nav-link-inverse active" id="rata-fit-tab" data-toggle="tab" href="#rata-fit" role="tab" aria-controls="rata-fit" aria-selected="true">Rata (Fit)</a>
+		</li>
+		<li class="nav-item">
+			<a class="nav-link nav-link-inverse" id="rata-test-tab" data-toggle="tab" href="#rata-test" role="tab" aria-controls="rata-test" aria-selected="false">Rata (Test)</a>
+		</li>
+		<li class="nav-item">
+			<a class="nav-link nav-link-inverse" id="flat-fit-tab" data-toggle="tab" href="#flat-fit" role="tab" aria-controls="flat-fit" aria-selected="false">Flat (Fit)</a>
+		</li>
+		<li class="nav-item">
+			<a class="nav-link nav-link-inverse" id="flat-test-tab" data-toggle="tab" href="#flat-test" role="tab" aria-controls="flat-test" aria-selected="false">Flat (Test)</a>
+		</li>
+	</ul>
   </div>
+</div>
+
+<div class="tab-content flex" id="myTabContent">
+	<div class="tab-pane fade show active" id="rata-fit" role="tabpanel" aria-labelledby="rata-fit-tab">
+		<div class="container-fluid container py-4">
+		  <div class="row justify-content-center mt-4">
+			<h3 class="mb-4">Nilai Rata-Rata (Fit)</h3>
+			<div class="col-md-12">
+				<table class="table table-bordered table-striped">
+				  <thead>
+					<tr>
+					  <th class="text-nowrap bg-light">Kabupaten/Kota</th>
+					  {% for name in score_headers %}
+					    <th class="text-nowrap bg-light">{{name}}</th>
+					  {% endfor %}
+					</tr>
+				  </thead>
+				  <tbody>
+					{% for kabko, kabko_text, values in rata_fit %}
+					<tr>
+					  <th class="shrink" scope="row">
+						<a class="" href="/grafik/{{ kabko }}">{{ kabko_text }}</a>
+					  </th>
+					  {% for value in values %}
+					    <td>{{value}}</td>
+					  {% endfor %}
+					</tr>
+					{% endfor %}
+				  </tbody>
+				</table>
+			</div>
+		  </div>
+		</div>
+	</div>
+	<div class="tab-pane fade show" id="rata-test" role="tabpanel" aria-labelledby="rata-test-tab">
+		<div class="container-fluid container py-4">
+		  <div class="row justify-content-center mt-4">
+			<h3 class="mb-4">Nilai Rata-Rata (Test)</h3>
+			<div class="col-md-12">
+				<table class="table table-bordered table-striped">
+				  <thead>
+					<tr>
+					  <th class="text-nowrap bg-light">Kabupaten/Kota</th>
+					  {% for name in score_headers %}
+					    <th class="text-nowrap bg-light">{{name}}</th>
+					  {% endfor %}
+					</tr>
+				  </thead>
+				  <tbody>
+					{% for kabko, kabko_text, values in rata_test %}
+					<tr>
+					  <th class="shrink" scope="row">
+						<a class="" href="/grafik/{{ kabko }}">{{ kabko_text }}</a>
+					  </th>
+					  {% for value in values %}
+					    <td>{{value}}</td>
+					  {% endfor %}
+					</tr>
+					{% endfor %}
+				  </tbody>
+				</table>
+			</div>
+		  </div>
+		</div>
+	</div>
+	<div class="tab-pane fade show" id="flat-fit" role="tabpanel" aria-labelledby="flat-fit-tab">
+		<div class="container-fluid container py-4">
+		  <div class="row justify-content-center mt-4">
+			<h3 class="mb-4">Nilai Flat (Fit)</h3>
+			<div class="col-md-12">
+				<table class="table table-bordered table-striped">
+				  <thead>
+					<tr>
+					  <th class="text-nowrap bg-light">Kabupaten/Kota</th>
+					  {% for name in score_headers %}
+					    <th class="text-nowrap bg-light">{{name}}</th>
+					  {% endfor %}
+					</tr>
+				  </thead>
+				  <tbody>
+					{% for kabko, kabko_text, values in flat_fit %}
+					<tr>
+					  <th class="shrink" scope="row">
+						<a class="" href="/grafik/{{ kabko }}">{{ kabko_text }}</a>
+					  </th>
+					  {% for value in values %}
+					    <td>{{value}}</td>
+					  {% endfor %}
+					</tr>
+					{% endfor %}
+				  </tbody>
+				</table>
+			</div>
+		  </div>
+		</div>
+	</div>
+	<div class="tab-pane fade show" id="flat-test" role="tabpanel" aria-labelledby="flat-test-tab">
+		<div class="container-fluid container py-4">
+		  <div class="row justify-content-center mt-4">
+			<h3 class="mb-4">Nilai Flat (Test)</h3>
+			<div class="col-md-12">
+				<table class="table table-bordered table-striped">
+				  <thead>
+					<tr>
+					  <th class="text-nowrap bg-light">Kabupaten/Kota</th>
+					  {% for name in score_headers %}
+					    <th class="text-nowrap bg-light">{{name}}</th>
+					  {% endfor %}
+					</tr>
+				  </thead>
+				  <tbody>
+					{% for kabko, kabko_text, values in flat_test %}
+					<tr>
+					  <th class="shrink" scope="row">
+						<a class="" href="/grafik/{{ kabko }}">{{ kabko_text }}</a>
+					  </th>
+					  {% for value in values %}
+					    <td>{{value}}</td>
+					  {% endfor %}
+					</tr>
+					{% endfor %}
+				  </tbody>
+				</table>
+			</div>
+		  </div>
+		</div>
+	</div>
 </div>
 {% endblock %}

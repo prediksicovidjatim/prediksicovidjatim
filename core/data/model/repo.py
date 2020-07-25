@@ -255,3 +255,66 @@ def save_fitting_result(fit_result, option="seicrd_rlc"):
             update_scores(kabko.kabko, fit_result.datasets, fit_result.test_scorer, True, cur)
             update_scores(kabko.kabko, ["flat"], fit_result.test_scorer.flatten(), True, cur)
         conn.commit()
+        
+
+def fetch_scores(kabko, cur=None):
+    if cur:
+        return _fetch_scores(kabko, cur)
+    else:
+        with database.get_conn() as conn, conn.cursor() as cur:
+            return _fetch_scores(kabko, cur)
+    
+def _split_test(ret):
+    return [r[1:] for r in ret if r[0]==0], [r[1:] for r in ret if r[0]==1]
+    
+def _fetch_scores(kabko, cur):
+    cur.execute("""
+        SELECT 
+            test, d.text, nvarys, max_error, mae, rmse, rmsle, r2, r2_adj, smape, mase, redchi, aic, aicc, bic
+        FROM main.scores s, main.dataset d
+        WHERE s.dataset=d.dataset AND s.kabko=%s
+        ORDER BY s.test ASC, d.order ASC
+    """, (kabko,))
+    
+    ret = [args for args in cur.fetchall()]
+    #return ret
+    return _split_test(ret)
+    
+def fetch_scores_flat(cur=None):
+    if cur:
+        return _fetch_scores_flat(cur)
+    else:
+        with database.get_conn() as conn, conn.cursor() as cur:
+            return _fetch_scores_flat(cur)
+            
+def _fetch_scores_flat(cur):
+    cur.execute("""
+        SELECT 
+            s.test, s.kabko, k.text, mae, rmse, rmsle, r2_adj, smape, mase, redchi, aicc, bic
+        FROM main.scores s, main.kabko k
+        WHERE s.kabko=k.kabko AND s.dataset='flat'
+        ORDER BY k.kabko, s.test
+    """)
+    
+    ret = [args for args in cur.fetchall()]
+    #return ret
+    return _split_test(ret)
+    
+def fetch_scores_avg(cur=None):
+    if cur:
+        return _fetch_scores_avg(cur)
+    else:
+        with database.get_conn() as conn, conn.cursor() as cur:
+            return _fetch_scores_avg(cur)
+    
+def _fetch_scores_avg(cur):
+    cur.execute("""
+        SELECT 
+            s.test, s.kabko, k.text, mae, rmse, rmsle, r2_adj, smape, mase, redchi, aicc, bic
+        FROM main.scores_avg s, main.kabko k
+        WHERE s.kabko=k.kabko
+    """)
+    
+    ret = [args for args in cur.fetchall()]
+    #return ret
+    return _split_test(ret)

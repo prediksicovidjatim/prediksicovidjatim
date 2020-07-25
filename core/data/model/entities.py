@@ -272,3 +272,7 @@ class ParamData:
         self.expr = expr
         self.stderr = stderr
         
+class Scores:
+    def __init__(self, *args):
+        self.tuple = args
+        self.test, self.dataset, self.nvarys, self.max_error, self.mae, self.rmse, self.rmsle, self.r2, self.r2_adj, self.smape = smape, self.mase, self.redchi, self.aic, self.aicc, self.bic = args
