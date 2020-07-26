@@ -21,4 +21,4 @@ numdifftools
 statsmodels
 #numba
 -e git://github.com/prediksicovidjatim/lmfit-py.git#egg=lmfit-py
--e git://github.com/prediksicovidjatim/prediksicovidjatim-core.git#egg=prediksicovidjatim-core
+-e git://github.com/R-N/prediksicovidjatim-core.git#egg=prediksicovidjatim-core
