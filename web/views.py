@@ -7,9 +7,9 @@ import matplotlib.pyplot as plt
 import mpld3
 import numpy as np
 
-from core.data.model import ModelDataRepo
-from core import config, util, database
-from core.modeling import SeicrdRlcModel, ModelPlotter
+from prediksicovidjatim.data.model import ModelDataRepo
+from prediksicovidjatim import config, util, database
+from prediksicovidjatim.modeling import SeicrdRlcModel, ModelPlotter
 
 import math
 

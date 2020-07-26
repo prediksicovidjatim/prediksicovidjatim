@@ -1,5 +1,5 @@
-from core import database
-from core.data.model import ModelDataRepo
+from prediksicovidjatim import database
+from prediksicovidjatim.data.model import ModelDataRepo
 from django.apps import AppConfig
 
 class WebConfig(AppConfig):
