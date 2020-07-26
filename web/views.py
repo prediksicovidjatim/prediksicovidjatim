@@ -8,7 +8,7 @@ import mpld3
 import numpy as np
 
 from core.data.model import ModelDataRepo
-from core import config, util
+from core import config, util, database
 from core.modeling import SeicrdRlcModel, ModelPlotter
 
 import math
@@ -56,17 +56,22 @@ score_headers_flat = [
 def _preprocess_scores_flat(scores):
     if len(scores) == 0:
         return [], []
-    return [(s[0], s[1], _round(s[2:])) for s in scores]
+    kabko = [s[:2] for s in scores]
+    scores_1 = util.transpose_list_list([s[2:] for s in scores])
+    scores_2 = util.transpose_list_list([_round(s) for s in scores_1])
+    
+    return [(*(kabko[i]), scores_2[i]) for i in range(0, len(kabko))]
 
 def kabko(request):
     kabko = request.GET.getlist('kabko')
     if kabko and len(kabko) > 0 and kabko[0]:
         return grafik(request, kabko[0])
         
-    kabko_dict = ModelDataRepo.fetch_kabko_dict()
-    
-    rata_fit, rata_test = ModelDataRepo.fetch_scores_avg()
-    flat_fit, flat_test = ModelDataRepo.fetch_scores_flat()
+    with database.get_conn() as conn, conn.cursor() as cur:
+        kabko_scored = ModelDataRepo.fetch_kabko_scored(cur)
+        
+        rata_fit, rata_test = ModelDataRepo.fetch_scores_avg(cur)
+        flat_fit, flat_test = ModelDataRepo.fetch_scores_flat(cur)
     
     rata_fit = _preprocess_scores_flat(rata_fit)
     rata_test = _preprocess_scores_flat(rata_test)
@@ -74,7 +79,7 @@ def kabko(request):
     flat_test = _preprocess_scores_flat(flat_test)
     
     data =  {
-        "kabko_dict": kabko_dict,
+        "kabko_scored": kabko_scored,
         "score_headers": score_headers_flat,
         "rata_fit": rata_fit,
         "rata_test": rata_test,
@@ -135,13 +140,15 @@ def _plot_compare(plotter, kabko, d, length):
     )
     
 def grafik(request, kabko):
-    kabko_dict = ModelDataRepo.fetch_kabko_dict()
-    
-    if kabko not in kabko_dict:
-        raise Http404
-    
-    kabko = ModelDataRepo.get_kabko_full(kabko)
-    
+    with database.get_conn() as conn, conn.cursor() as cur:
+        kabko_scored = ModelDataRepo.fetch_kabko_scored(cur)
+        
+        if kabko not in {x[0] for x in kabko_scored}:
+            raise Http404
+        
+        kabko = ModelDataRepo.get_kabko_full(kabko, cur)
+        fit_scores, test_scores = ModelDataRepo.fetch_scores(kabko.kabko, cur)
+        
     mod = SeicrdRlcModel(kabko)
     params = kabko.get_params_init(extra_days=config.PREDICT_DAYS)
     model_result = mod.model(**params)
@@ -151,7 +158,6 @@ def grafik(request, kabko):
     datasets = ["infectious_all", "critical_cared", "recovered", "dead", "infected"]
     compare = {d:mpld3.fig_to_html(_plot_compare(plotter, kabko, d, length)) for d in datasets}
     
-    fit_scores, test_scores = ModelDataRepo.fetch_scores(kabko.kabko)
     fit_sets, fit_scores = _preprocess_scores(fit_scores)
     test_sets, test_scores = _preprocess_scores(test_scores)
     
@@ -169,7 +175,7 @@ def grafik(request, kabko):
     
     data = {
         "kabko": kabko,
-        "kabko_dict": kabko_dict,
+        "kabko_scored": kabko_scored,
         "main_plots": main,
         "compare_plots": compare,
         "fit_sets": fit_sets,

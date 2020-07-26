@@ -3,6 +3,26 @@ from core.data.model.entities import KabkoData, DayData, ParamData, RtData
 from core.data.raw.repo import fetch_kabko, fetch_kabko_dict, get_latest_tanggal, get_oldest_tanggal
 from core.modeling import BaseModel
 
+def fetch_kabko_scored(cur=None):
+    if cur:
+        return _fetch_kabko_scored(cur)
+    else:
+        with database.get_conn() as conn, conn.cursor() as cur:
+            return _fetch_kabko_scored(cur)
+            
+def _fetch_kabko_scored(cur):
+    cur.execute("""
+        SELECT k.kabko, k.text 
+        FROM main.kabko k
+        WHERE k.kabko IN (
+            SELECT DISTINCT s.kabko
+            FROM main.scores s
+        )
+        ORDER BY k.kabko
+    """)
+    
+    return list(cur.fetchall())
+        
 def fetch_day_data(kabko, cur=None):
     if cur:
         return _fetch_day_data(kabko, cur)
@@ -114,15 +134,21 @@ def _get_kabko(kabko, cur):
     
     return (*cur.fetchone(),)
         
-def get_kabko_full(kabko):
-    with database.get_conn() as conn, conn.cursor() as cur:
-        return KabkoData(
-            *get_kabko(kabko, cur), 
-            fetch_day_data(kabko, cur), 
-            fetch_kapasitas_rs(kabko, cur), 
-            fetch_rt_data(kabko, cur), 
-            fetch_param_data(kabko, cur)
-        )
+def get_kabko_full(kabko, cur=None):
+    if cur:
+        return _get_kabko_full(kabko, cur)
+    else:
+        with database.get_conn() as conn, conn.cursor() as cur:
+            return _get_kabko_full(kabko, cur)
+
+def _get_kabko_full(kabko, cur):
+    return KabkoData(
+        *get_kabko(kabko, cur), 
+        fetch_day_data(kabko, cur), 
+        fetch_kapasitas_rs(kabko, cur), 
+        fetch_rt_data(kabko, cur), 
+        fetch_param_data(kabko, cur)
+    )
     
 def update_params_init(kabko, filtered_params, cur=None):
     if cur:
@@ -293,7 +319,7 @@ def _fetch_scores_flat(cur):
             s.test, s.kabko, k.text, mae, rmse, rmsle, r2_adj, smape, mase, redchi, aicc, bic
         FROM main.scores s, main.kabko k
         WHERE s.kabko=k.kabko AND s.dataset='flat'
-        ORDER BY k.kabko, s.test
+        ORDER BY s.test, k.kabko
     """)
     
     ret = [args for args in cur.fetchall()]
@@ -313,6 +339,7 @@ def _fetch_scores_avg(cur):
             s.test, s.kabko, k.text, mae, rmse, rmsle, r2_adj, smape, mase, redchi, aicc, bic
         FROM main.scores_avg s, main.kabko k
         WHERE s.kabko=k.kabko
+        ORDER BY s.test, k.kabko
     """)
     
     ret = [args for args in cur.fetchall()]
