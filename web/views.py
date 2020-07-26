@@ -65,7 +65,7 @@ def _preprocess_scores_flat(scores):
 def kabko(request):
     kabko = request.GET.getlist('kabko')
     if kabko and len(kabko) > 0 and kabko[0]:
-        return grafik(request, kabko[0])
+        return model(request, kabko[0])
         
     with database.get_conn() as conn, conn.cursor() as cur:
         kabko_scored = ModelDataRepo.fetch_kabko_scored(cur)
@@ -139,7 +139,7 @@ def _plot_compare(plotter, kabko, d, length):
         length
     )
     
-def grafik(request, kabko):
+def model(request, kabko):
     with database.get_conn() as conn, conn.cursor() as cur:
         kabko_scored = ModelDataRepo.fetch_kabko_scored(cur)
         

@@ -14,7 +14,7 @@
 
 		<div class="dropdown-menu pre-scrollable" aria-labelledby="dropdownMenuLink">
 			{% for key, value in kabko_scored %}
-			<a class="dropdown-item" href="/grafik/{{ key }}">{{ value }}</a>
+			<a class="dropdown-item" href="/model/{{ key }}">{{ value }}</a>
 			{% endfor %}
 		</div>
 	</div>
@@ -54,7 +54,7 @@
 					{% for kabko, kabko_text, values in rata_fit %}
 					<tr>
 					  <th class="shrink" scope="row">
-						<a class="" href="/grafik/{{ kabko }}">{{ kabko_text }}</a>
+						<a class="" href="/model/{{ kabko }}">{{ kabko_text }}</a>
 					  </th>
 					  {% for value in values %}
 					    <td>{{value}}</td>
@@ -85,7 +85,7 @@
 					{% for kabko, kabko_text, values in rata_test %}
 					<tr>
 					  <th class="shrink" scope="row">
-						<a class="" href="/grafik/{{ kabko }}">{{ kabko_text }}</a>
+						<a class="" href="/model/{{ kabko }}">{{ kabko_text }}</a>
 					  </th>
 					  {% for value in values %}
 					    <td>{{value}}</td>
@@ -116,7 +116,7 @@
 					{% for kabko, kabko_text, values in flat_fit %}
 					<tr>
 					  <th class="shrink" scope="row">
-						<a class="" href="/grafik/{{ kabko }}">{{ kabko_text }}</a>
+						<a class="" href="/model/{{ kabko }}">{{ kabko_text }}</a>
 					  </th>
 					  {% for value in values %}
 					    <td>{{value}}</td>
@@ -147,7 +147,7 @@
 					{% for kabko, kabko_text, values in flat_test %}
 					<tr>
 					  <th class="shrink" scope="row">
-						<a class="" href="/grafik/{{ kabko }}">{{ kabko_text }}</a>
+						<a class="" href="/model/{{ kabko }}">{{ kabko_text }}</a>
 					  </th>
 					  {% for value in values %}
 					    <td>{{value}}</td>

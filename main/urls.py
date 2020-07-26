@@ -19,8 +19,8 @@ urlpatterns = [
     path("db/", web.views.db, name="db"),
     path("admin/", admin.site.urls),
     path("notebook/<path:nb_path>", web.views.notebook),
-    path("grafik/", web.views.kabko),
-    path("grafik/<str:kabko>", web.views.grafik),
+    path("model/", web.views.kabko),
+    path("model/<str:kabko>", web.views.model),
     path("about/", web.views.about),
-    path("map/", web.views.map),
+    #path("map/", web.views.map),
 ]
