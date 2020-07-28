@@ -20,5 +20,7 @@ numdifftools
 #lmfit
 statsmodels
 #numba
+memory_profiler
+line_profiler
 -e git://github.com/prediksicovidjatim/lmfit-py.git#egg=lmfit-py
 -e git://github.com/R-N/prediksicovidjatim-core.git#egg=prediksicovidjatim-core
