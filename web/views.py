@@ -135,35 +135,41 @@ def _plot_compare(plotter, kabko, d, length):
     datasets = kabko.get_datasets([d], kabko.last_outbreak_shift)
     return plotter.plot(
         plotter.plot_main_data, 
-        datasets,
-        length
+        [d]
     )
     
 def model(request, kabko):
     with database.get_conn() as conn, conn.cursor() as cur:
         kabko_scored = ModelDataRepo.fetch_kabko_scored(cur)
-        
+
         if kabko not in {x[0] for x in kabko_scored}:
             raise Http404
-        
+
         kabko = ModelDataRepo.get_kabko_full(kabko, cur)
         fit_scores, test_scores = ModelDataRepo.fetch_scores(kabko.kabko, cur)
-        
+
     mod = SeicrdRlcModel(kabko)
     params = kabko.get_params_init(extra_days=config.PREDICT_DAYS)
     model_result = mod.model(**params)
-    
-    plotter = ModelPlotter(model_result)
-    length = kabko.data_count + kabko.last_outbreak_shift
+
+    plotter = ModelPlotter(kabko, model_result)
     datasets = ["infectious_all", "critical_cared", "recovered", "dead", "infected"]
-    compare = {d:mpld3.fig_to_html(_plot_compare(plotter, kabko, d, length)) for d in datasets}
+    compare = {d:mpld3.fig_to_html(plotter.plot(
+        plotter.plot_main_data, 
+        [d]
+    )) for d in datasets}
     
     fit_sets, fit_scores = _preprocess_scores(fit_scores)
     test_sets, test_scores = _preprocess_scores(test_scores)
     
     fit_scores = fit_scores[1:]
     test_scores = test_scores[1:]
-    
+    '''
+    import logging
+    logger = logging.getLogger("mylogger")
+    logger.info("Fit scores: " + str(len(fit_scores)))
+    logger.info("Test scores: " + str(len(test_scores)))
+    '''
     main = {
         "main": mpld3.fig_to_html(plotter.plot(plotter.plot_main)),
         "main_lite": mpld3.fig_to_html(plotter.plot(plotter.plot_main_lite)),
