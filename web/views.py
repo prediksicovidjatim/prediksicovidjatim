@@ -95,9 +95,9 @@ def _ma(x):
 def _round(x):
     y = _ma(x)
     if y > 9999:
-        return np.round(x, 0)
+        return np.round(x, 2)
     elif y > 99:
-        return np.round(x, 1)
+        return np.round(x, 2)
     elif y > 9:
         return np.round(x, 2)
     elif y > 2:
