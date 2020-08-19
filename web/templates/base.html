@@ -1,0 +1,37 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+<title>Prediksi Covid-19 Jatim</title>
+  <link rel="stylesheet" type="text/css" href="{% static 'css/bootstrap.min.css' %}" />
+  <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}" />
+  <script src="{% static 'js/jquery.min.js' %}"></script>
+  <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+</head>
+<body class="d-flex flex-column">
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="navbar-brand">PCovidJatim</div>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+    <ul class="navbar-nav mr-auto">
+      <li class="nav-item">
+        <a class="nav-link" href="/"><span class="glyphicon glyphicon-home"></span> Home</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/model"><span class="glyphicon glyphicon-stats"></span> Model</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/about"><span class="glyphicon glyphicon-info-sign"></span> About</a>
+      </li>
+    </ul>
+  </div>
+</nav>
+{% block content %}{% endblock %}
+<div class=" bg-dark text-center text-white py-3">
+	&#169; 2020 Prediksi Covid Jatim
+</div>
+</body>
+</html>

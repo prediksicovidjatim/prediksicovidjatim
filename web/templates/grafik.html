@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+<div class="jumbotron text-center corner-0 pt-5 pb-0 px-0">
+  <div class="container-fluid">
+    <h2 class="display-4 mb-4">Prediksi {{ kabko.text }}</h2>
+	<div class="dropdown show mb-5">
+		<a class="btn btn-secondary dropdown-toggle btn-lg" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+			Pilih Kabupaten/Kota lain
+		</a>
+
+		<div class="dropdown-menu pre-scrollable" aria-labelledby="dropdownMenuLink">
+			{% for key, value in kabko_scored %}
+			<a class="dropdown-item" href="/model/{{ key }}">{{ value }}</a>
+			{% endfor %}
+		</div>
+	</div>
+	<ul class="nav nav-tabs justify-content-center mt-5" id="myTab" role="tablist">
+		<li class="nav-item">
+			<a class="nav-link nav-link-inverse active" id="overview-tab" data-toggle="tab" href="#overview" role="tab" aria-controls="overview" aria-selected="true">Skor</a>
+		</li>
+		<li class="nav-item">
+			<a class="nav-link nav-link-inverse" id="komparasi-tab" data-toggle="tab" href="#komparasi" role="tab" aria-controls="komparasi" aria-selected="false">Perbandingan</a>
+		</li>
+		<li class="nav-item">
+			<a class="nav-link nav-link-inverse" id="model-tab" data-toggle="tab" href="#model" role="tab" aria-controls="model" aria-selected="false">Model</a>
+		</li>
+	</ul>
+  </div>
+</div>
+<div class="tab-content flex" id="myTabContent">
+	<div class="tab-pane fade show active" id="overview" role="tabpanel" aria-labelledby="overview-tab">
+		<div class="container-fluid container py-4">
+		  <div class="row justify-content-center mt-4">
+			<h3 class="">Last Fit Scores</h3>
+			<div class="col-md-12">
+				<table class="table table-bordered table-striped">
+				  <thead>
+					<tr>
+					  <th class="text-nowrap bg-light">Nilai</th>
+					  {% for dataset in fit_sets %}
+					    <th class="text-nowrap bg-light">{{dataset}}</th>
+					  {% endfor %}
+					</tr>
+				  </thead>
+				  <tbody>
+					{% for score, values in fit_scores %}
+					<tr>
+					  <th class="shrink" scope="row">{{score}}</th>
+					  {% for value in values %}
+					    <td>{{value}}</td>
+					  {% endfor %}
+					</tr>
+					{% endfor %}
+				  </tbody>
+				</table>
+			</div>
+		  </div>
+		  <div class="row justify-content-center mt-4">
+			<h3 class="">Test Scores</h3>
+			<div class="col-md-12">
+				<table class="table table-bordered table-striped">
+				  <thead>
+					<tr>
+					  <th class="text-nowrap bg-light">Nilai</th>
+					  {% for dataset in test_sets %}
+					    <th class="text-nowrap bg-light">{{dataset}}</th>
+					  {% endfor %}
+					</tr>
+				  </thead>
+				  <tbody>
+					{% for score, values in test_scores %}
+					<tr>
+					  <th class="shrink" scope="row">{{score}}</th>
+					  {% for value in values %}
+					    <td>{{value}}</td>
+					  {% endfor %}
+					</tr>
+					{% endfor %}
+				  </tbody>
+				</table>
+			</div>
+		  </div> <!-- row -->
+		</div>
+	</div>
+	<div class="tab-pane fade" id="komparasi" role="tabpanel" aria-labelledby="komparasi-tab">
+		<div class="container-fluid text-center">
+		  <div class="row justify-content-center mt-4">
+			<h3>Positif Aktif</h3>
+			<div class="col-md-12">
+				{{ compare_plots|get_item:"infectious_all"|safe }}
+			</div>
+		  </div>
+		  <div class="row justify-content-center mt-4">
+			<h3>Positif Rawat RS</h3>
+			<div class="col-md-12 ">
+				{{ compare_plots|get_item:"critical_cared"|safe }}
+			</div>
+		  </div>
+		  <div class="row justify-content-center mt-4">
+			<h3>Positif Sembuh</h3>
+			<div class="col-md-12 ">
+				{{ compare_plots|get_item:"recovered"|safe }}
+			</div>
+		  </div>
+		  <div class="row justify-content-center mt-4">
+			<h3>Positif Meninggal</h3>
+			<div class="col-md-12 ">
+				{{ compare_plots|get_item:"dead"|safe }}
+			</div>
+		  </div>
+		  <div class="row justify-content-center mt-4">
+			<h3>Positif Total</h3>
+			<div class="col-md-12 ">
+				{{ compare_plots|get_item:"infected"|safe }}
+			</div>
+		  </div>
+		</div>
+	</div>
+	<div class="tab-pane fade" id="model" role="tabpanel" aria-labelledby="model-tab">
+		<div class="container-fluid text-center">
+		  <div class="row justify-content-center mt-4">
+			<h3 class="">Utama</h3>
+			<div class="col-md-12 ">
+				{{ main_plots|get_item:"main"|safe }}
+			</div>
+		  </div>
+		  <div class="row justify-content-center mt-4">
+			<h3>Utama (Lite)</h3>
+			<div class="col-md-12 ">
+				{{ main_plots|get_item:"main_lite"|safe }}
+			</div>
+		  </div>
+		  <div class="row justify-content-center mt-4">
+			<h3>Harian (Lite)</h3>
+			<div class="col-md-12 ">
+				{{ main_plots|get_item:"daily_lite"|safe }}
+			</div>
+		  </div>
+		  <div class="row justify-content-center mt-4">
+			<h3>Laju Kematian</h3>
+			<div class="col-md-12 ">
+				{{ main_plots|get_item:"mortality_rate"|safe }}
+			</div>
+		  </div>
+		  <div class="row justify-content-center mt-4">
+			<h3>Dampak Kurangnya Kapasitas RS</h3>
+			<div class="col-md-12 ">
+				{{ main_plots|get_item:"over"|safe }}
+			</div>
+		  </div>
+		</div>
+	</div>
+</div>
+{% endblock %}
