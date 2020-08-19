@@ -1,45 +1,27 @@
-# Python: Getting Started
+# PCovidJatim - Website
 
-A barebones Django app, which can easily be deployed to Heroku.
+This is the source of the website of PCovidJatim. It's built with Django. The map is just an iframe here. Mpld3 is used to make the plots interactive.
 
-This application supports the [Getting Started with Python on Heroku](https://devcenter.heroku.com/articles/getting-started-with-python) article - check it out.
+PCovidJatim is a webmap of forecast of COVID-19 spread in East Java. The data is obtained from the East Java government. It is then used to fit a SEICRD model with lmfit. The +30 days forecast of the model and the actual data are then mapped into a time aware webmap made with ArcGIS Online using its Python API. The webmap is loaded in an Arcgis Online web app and then loaded in the website in an iframe. In addition to the map, the website also offers the model scores and plots. Every day, a worker checks the data source for new data and update the forecast and map if any. Every few days, a worker re-fit the model and update the forecast and map. They're all hosted in heroku.
 
-## Running Locally
+The site is available here: 
+https://prediksicovidjatim.herokuapp.com
 
-Make sure you have Python 3.7 [installed locally](http://install.python-guide.org). To push to Heroku, you'll need to install the [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli), as well as [Postgres](https://devcenter.heroku.com/articles/heroku-postgresql#local-setup).
+The paper is available here:
+https://drive.google.com/file/d/1qbaiPBGEC2Iwqq2rxnZqlxS0gXQzYTXR/view?usp=sharing
 
-```sh
-$ git clone https://github.com/heroku/python-getting-started.git
-$ cd python-getting-started
+The site source code is available here:
+https://github.com/prediksicovidjatim/prediksicovidjatim
 
-$ python3 -m venv getting-started
-$ pip install -r requirements.txt
+The core module is made as a pip installable package and is available here:
+https://github.com/prediksicovidjatim/prediksicovidjatim-core
 
-$ createdb python_getting_started
+The web app is made with Arcgis Online Web AppBuilder Developer Edition. It is only a little bit modified to adjust the time slider. The source code is available here:
+https://github.com/prediksicovidjatim/prediksicovidjatim-map
 
-$ python manage.py migrate
-$ python manage.py collectstatic
+The worker source code is available here:
+https://github.com/prediksicovidjatim/prediksicovidjatim-worker
 
-$ heroku local
-```
+Notebooks used in development is available here: 
+https://github.com/prediksicovidjatim/prediksicovidjatim-notebooks
 
-Your app should now be running on [localhost:5000](http://localhost:5000/).
-
-## Deploying to Heroku
-
-```sh
-$ heroku create
-$ git push heroku master
-
-$ heroku run python manage.py migrate
-$ heroku open
-```
-or
-
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
-
-## Documentation
-
-For more information about using Python on Heroku, see these Dev Center articles:
-
-- [Python on Heroku](https://devcenter.heroku.com/categories/python)
